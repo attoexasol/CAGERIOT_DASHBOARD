@@ -1,0 +1,42 @@
+{
+  "name": "cage-riot-dashboard",
+  "version": "1.0.0",
+  "description": "Music Rights Management Dashboard - Full Frontend with REST API Integration",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "setup": "cp .env.example .env && echo '\n✅ Environment file created! Edit .env to configure your API settings.'",
+    "clean": "rm -rf dist node_modules",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.20.0",
+    "zustand": "^4.5.0",
+    "recharts": "^2.10.0",
+    "lucide-react": "^0.344.0",
+    "sonner": "^1.4.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

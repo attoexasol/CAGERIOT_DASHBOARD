@@ -1,0 +1,219 @@
+/**
+ * Artists API Service
+ * Supports both demo and live API modes
+ */
+
+import { API_CONFIG } from '../../config';
+import { Artist, CreateArtistRequest, ListParams } from '../types';
+import { isDemoMode } from '../../config';
+import { logger } from '../../logger';
+import { getApiHeaders, handleApiResponse } from '../helpers';
+import { demoArtists, simulateDelay } from '../demo-data';
+import { demoStorage } from '../demo-storage';
+
+export const artistsService = {
+  /**
+   * GET - Get all artists
+   */
+  async getAll(params?: ListParams): Promise<any> {
+    // Demo mode
+    if (isDemoMode()) {
+      logger.api('Fetching artists (demo mode)');
+      await simulateDelay();
+      
+      let artists = [...demoArtists, ...demoStorage.getAll<Artist>('artists')];
+      
+      // Apply search filter
+      if (params?.search) {
+        const search = params.search.toLowerCase();
+        artists = artists.filter(a => 
+          a.name.toLowerCase().includes(search) ||
+          a.email.toLowerCase().includes(search)
+        );
+      }
+      
+      // Apply pagination
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      
+      return {
+        data: artists.slice(start, end),
+        pagination: {
+          page,
+          limit,
+          total: artists.length,
+          totalPages: Math.ceil(artists.length / limit),
+        },
+      };
+    }
+
+    // Live API mode
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', String(params.page));
+      if (params?.limit) queryParams.append('limit', String(params.limit));
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.sort) queryParams.append('sort', params.sort);
+      if (params?.order) queryParams.append('order', params.order);
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/artists?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: getApiHeaders(true),
+        }
+      );
+
+      const data = await handleApiResponse(response);
+      return data;
+    } catch (error) {
+      logger.error('Get artists failed:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * GET - Get artist by ID
+   */
+  async getById(id: string): Promise<Artist> {
+    // Demo mode
+    if (isDemoMode()) {
+      logger.api(`Fetching artist ${id} (demo mode)`);
+      await simulateDelay();
+      
+      const artist = demoArtists.find(a => a.id === id) || demoStorage.getById<Artist>('artists', id);
+      if (!artist) throw new Error('Artist not found');
+      return artist;
+    }
+
+    // Live API mode
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/artists/${id}`, {
+        method: 'GET',
+        headers: getApiHeaders(true),
+      });
+
+      const data = await handleApiResponse<Artist>(response);
+      return data;
+    } catch (error) {
+      logger.error(`Get artist ${id} failed:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * POST - Create new artist
+   */
+  async create(artistData: CreateArtistRequest): Promise<Artist> {
+    // Demo mode
+    if (isDemoMode()) {
+      logger.api('Creating artist (demo mode)');
+      await simulateDelay();
+      
+      const newArtist: Artist = {
+        id: `artist-${Date.now()}`,
+        name: artistData.name,
+        email: artistData.email,
+        role: artistData.role,
+        phone: artistData.phone,
+        bio: artistData.bio,
+        totalReleases: 0,
+        totalStreams: 0,
+        totalRoyalties: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      demoStorage.add('artists', newArtist);
+      
+      return newArtist;
+    }
+
+    // Live API mode
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/artists`, {
+        method: 'POST',
+        headers: getApiHeaders(true),
+        body: JSON.stringify(artistData),
+      });
+
+      const data = await handleApiResponse<Artist>(response);
+      return data;
+    } catch (error) {
+      logger.error('Create artist failed:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * PUT - Update artist
+   */
+  async update(id: string, artistData: Partial<CreateArtistRequest>): Promise<Artist> {
+    // Demo mode
+    if (isDemoMode()) {
+      logger.api(`Updating artist ${id} (demo mode)`);
+      await simulateDelay();
+      
+      const artist = demoArtists.find(a => a.id === id) || demoStorage.getById<Artist>('artists', id);
+      if (!artist) throw new Error('Artist not found');
+      
+      const updatedArtist = {
+        ...artist,
+        ...artistData,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      const storageArtist = demoStorage.getById<Artist>('artists', id);
+      if (storageArtist) {
+        demoStorage.update('artists', id, updatedArtist);
+      }
+      
+      return updatedArtist;
+    }
+
+    // Live API mode
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/artists/${id}`, {
+        method: 'PUT',
+        headers: getApiHeaders(true),
+        body: JSON.stringify(artistData),
+      });
+
+      const data = await handleApiResponse<Artist>(response);
+      return data;
+    } catch (error) {
+      logger.error(`Update artist ${id} failed:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * DELETE - Delete artist
+   */
+  async delete(id: string): Promise<void> {
+    // Demo mode
+    if (isDemoMode()) {
+      logger.api(`Deleting artist ${id} (demo mode)`);
+      await simulateDelay();
+      demoStorage.delete('artists', id);
+      return;
+    }
+
+    // Live API mode
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/artists/${id}`, {
+        method: 'DELETE',
+        headers: getApiHeaders(true),
+      });
+
+      await handleApiResponse(response);
+    } catch (error) {
+      logger.error(`Delete artist ${id} failed:`, error);
+      throw error;
+    }
+  },
+};
