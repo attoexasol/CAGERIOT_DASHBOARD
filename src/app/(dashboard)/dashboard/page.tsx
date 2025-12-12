@@ -1,109 +1,3 @@
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import { Music, Users, DollarSign, TrendingUp } from 'lucide-react';
-// import { ReleaseCard } from '../../../components/ReleaseCard';
-// import { SEO } from '../../../components/SEO';
-
-// const recentReleases = [
-//   {
-//     id: '1',
-//     title: 'Witching Hour',
-//     artist: 'Grace Power',
-//     type: 'Album',
-//     imageUrl: 'https://images.unsplash.com/photo-1644855640845-ab57a047320e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-//   },
-//   {
-//     id: '2',
-//     title: 'Hand On The Bible',
-//     artist: 'Grace Power',
-//     type: 'Single',
-//     imageUrl: 'https://images.unsplash.com/photo-1671786390055-13842b30e424?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-//   },
-//   {
-//     id: '3',
-//     title: 'How Does It Feel To Lose Me',
-//     artist: 'Grace Power',
-//     type: 'Single',
-//     imageUrl: 'https://images.unsplash.com/photo-1669546164343-d89ffdd1017f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-//   },
-//   {
-//     id: '4',
-//     title: 'Time After Time',
-//     artist: 'Grace Power',
-//     type: 'Single',
-//     imageUrl: 'https://images.unsplash.com/photo-1646500366920-b4c5ce29237d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-//   },
-// ];
-
-// export default function Dashboard() {
-//   return (
-//     <div className="p-3 sm:p-4 md:p-6 lg:p-8">
-//       <SEO
-//         title="Dashboard"
-//         description="Overview of your music rights portfolio with releases, artists, and revenue tracking"
-//         keywords="dashboard, music rights, releases, artists, revenue"
-//       />
-//       <div className="mb-4 sm:mb-6 md:mb-8">
-//         <h1 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl md:text-3xl text-white">Dashboard</h1>
-//         <p className="text-xs sm:text-sm md:text-base text-gray-400">Overview of your music rights portfolio</p>
-//       </div>
-
-//       {/* Stats Grid */}
-//       <div className="mb-4 sm:mb-6 md:mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-//         <div className="rounded-lg sm:rounded-xl border border-gray-800 bg-gray-900/30 p-3 sm:p-4 md:p-6">
-//           <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 text-gray-400">
-//             <Music className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-//             <span className="text-xs sm:text-sm truncate">Total Releases</span>
-//           </div>
-//           <div className="text-xl sm:text-2xl md:text-3xl text-white">24</div>
-//           <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-green-500">+3 this month</div>
-//         </div>
-
-//         <div className="rounded-lg sm:rounded-xl border border-gray-800 bg-gray-900/30 p-3 sm:p-4 md:p-6">
-//           <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 text-gray-400">
-//             <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-//             <span className="text-xs sm:text-sm truncate">Active Artists</span>
-//           </div>
-//           <div className="text-xl sm:text-2xl md:text-3xl text-white">12</div>
-//           <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-400">Across all labels</div>
-//         </div>
-
-//         <div className="rounded-lg sm:rounded-xl border border-gray-800 bg-gray-900/30 p-3 sm:p-4 md:p-6">
-//           <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 text-gray-400">
-//             <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-//             <span className="text-xs sm:text-sm truncate">Total Revenue</span>
-//           </div>
-//           <div className="text-xl sm:text-2xl md:text-3xl text-white">$389,200</div>
-//           <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-green-500">+18.3% this year</div>
-//         </div>
-
-//         <div className="rounded-lg sm:rounded-xl border border-gray-800 bg-gray-900/30 p-3 sm:p-4 md:p-6">
-//           <div className="mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2 text-gray-400">
-//             <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-//             <span className="text-xs sm:text-sm truncate">This Month</span>
-//           </div>
-//           <div className="text-xl sm:text-2xl md:text-3xl text-white">$31,200</div>
-//           <div className="mt-1 sm:mt-2 text-xs sm:text-sm text-green-500">+12.5% growth</div>
-//         </div>
-//       </div>
-
-//       {/* Recent Releases */}
-//       <div>
-//         <h2 className="mb-3 sm:mb-4 md:mb-6 text-base sm:text-lg md:text-xl text-white">Recent Releases</h2>
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-//           {recentReleases.map((release) => (
-//             <ReleaseCard key={release.id} {...release} />
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
 
 "use client";
 
@@ -113,7 +7,7 @@ import { ReleaseCard } from "../../../components/ReleaseCard";
 import { SEO } from "../../../components/SEO";
 import { releasesService } from "../../../lib/api";
 import { Release } from "../../../lib/api/types";
-
+import { Link } from "react-router-dom";
 export default function Dashboard() {
   const [recentReleases, setRecentReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,10 +65,10 @@ export default function Dashboard() {
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
         <h1 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl md:text-3xl text-white">
-          Dashboard
+          Hi, user.firstName ** Must dynamically
         </h1>
         <p className="text-xs sm:text-sm md:text-base text-gray-400">
-          Overview of your music rights portfolio
+          Your activity and insights
         </p>
       </div>
 
@@ -244,19 +138,21 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {recentReleases.map((release) => (
-              <ReleaseCard
-                key={release.id}
-                id={release.id}
-                title={release.title}
-                artist={release.artist}
-                type={release.type}
-                // FIX public packshot support
-                imageUrl={
-                  release.publicPackshot ||
-                  `https://packshot.rightshub.net/${release.id}` ||
-                  release.coverArt
-                }
-              />
+              <Link to={`/releases/${release.id}/overview`}>
+                <ReleaseCard
+                  key={release.id}
+                  id={release.id}
+                  title={release.title}
+                  artist={release.artist}
+                  type={release.type}
+                  // FIX public packshot support
+                  imageUrl={
+                    release.publicPackshot ||
+                    `https://packshot.rightshub.net/${release.id}` ||
+                    release.coverArt
+                  }
+                />
+              </Link>
             ))}
           </div>
         )}

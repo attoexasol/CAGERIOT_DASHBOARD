@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { logger } from '../lib/logger';
 
 interface UseApiOptions {
   onSuccess?: (data: any) => void;
@@ -56,7 +55,7 @@ export function useApi<T = any>(
 
       while (attempt <= (autoRetry ? maxRetries : 0)) {
         try {
-          logger.api(`API call attempt ${attempt + 1}`);
+          console.log(`[API] API call attempt ${attempt + 1}`);
           const result = await apiFunction(...args);
 
           setState({
@@ -71,7 +70,7 @@ export function useApi<T = any>(
           return result;
         } catch (error: any) {
           lastError = error;
-          logger.error(`API call failed (attempt ${attempt + 1})`, error);
+          console.error(`[API] API call failed (attempt ${attempt + 1}):`, error);
 
           if (attempt < maxRetries && autoRetry) {
             attempt++;

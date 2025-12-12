@@ -67,32 +67,41 @@
 //   );
 // }
 
+
 "use client";
 
 import { ReleaseSidebar } from "../../../../components/ReleaseSidebar";
 import { Header } from "../../../../components/Header";
 import { Outlet } from "react-router-dom";
+import { useState } from "react";
 
-interface ReleaseDetailsLayoutProps {
-  children?: React.ReactNode;
-}
-
-export default function ReleaseDetailsLayout({
-  children,
-}: ReleaseDetailsLayoutProps) {
+export default function ReleaseDetailsLayout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
-    <div className="flex h-screen bg-[#0a0a0a] text-white">
-      {/* LEFT SIDEBAR (Dark Catalog Menu) */}
-      <ReleaseSidebar />
+    <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden">
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
 
-      {/* RIGHT SIDE */}
-      <div className="flex flex-col flex-1">
-        {/* TOP HEADER */}
-        <Header />
+      <ReleaseSidebar
+        isMobileMenuOpen={isMobileMenuOpen}
+        onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+      />
+     
+    
+
+      {/* RIGHT SIDE AREA */}
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
+        {/* FIXED HEADER */}
+        <div className="border-b border-gray-800 bg-[#0a0a0a] sticky top-0 z-20">
+          <Header onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+        </div>
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {/* ---- IMPORTANT: Outlet renders child pages ---- */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

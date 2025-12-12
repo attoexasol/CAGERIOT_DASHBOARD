@@ -4,11 +4,11 @@
  * Copy this pattern for all your services
  */
 
-import { API_CONFIG } from '../../config';
-import { isDemoMode } from '../../config';
-import { logger } from '../../logger';
-import { getApiHeaders, handleApiResponse } from '../helpers';
-import { simulateDelay } from '../demo-data';
+import { API_CONFIG } from "../../config";
+import { isDemoMode } from "../../config";
+import { logger } from "../../logger";
+import { getApiHeaders, handleApiResponse } from "../helpers";
+import { simulateDelay } from "../demo-data";
 
 // Example: Releases Service following the exact pattern
 
@@ -19,7 +19,7 @@ export const exampleService = {
   async list(page: number = 1, limit: number = 10): Promise<any> {
     // Demo mode
     if (isDemoMode()) {
-      logger.api('Fetching items (demo mode)');
+      logger.api("Fetching items (demo mode)");
       await simulateDelay();
       return { data: [], pagination: { page, limit, total: 0, totalPages: 0 } };
     }
@@ -29,7 +29,7 @@ export const exampleService = {
       const response = await fetch(
         `${API_CONFIG.BASE_URL}/items?page=${page}&limit=${limit}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: getApiHeaders(true),
         }
       );
@@ -37,7 +37,7 @@ export const exampleService = {
       const data = await handleApiResponse(response);
       return data;
     } catch (error) {
-      logger.error('List items failed:', error);
+      logger.error("List items failed:", error);
       throw error;
     }
   },
@@ -50,13 +50,13 @@ export const exampleService = {
     if (isDemoMode()) {
       logger.api(`Fetching item ${id} (demo mode)`);
       await simulateDelay();
-      return { id, name: 'Demo Item' };
+      return { id, name: "Demo Item" };
     }
 
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/items/${id}`, {
-        method: 'GET',
+        method: "GET",
         headers: getApiHeaders(true),
       });
 
@@ -74,15 +74,15 @@ export const exampleService = {
   async create(itemData: any): Promise<any> {
     // Demo mode
     if (isDemoMode()) {
-      logger.api('Creating item (demo mode)');
+      logger.api("Creating item (demo mode)");
       await simulateDelay();
-      return { id: 'demo-' + Date.now(), ...itemData };
+      return { id: "demo-" + Date.now(), ...itemData };
     }
 
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/items`, {
-        method: 'POST',
+        method: "POST",
         headers: getApiHeaders(true),
         body: JSON.stringify(itemData),
       });
@@ -90,7 +90,7 @@ export const exampleService = {
       const data = await handleApiResponse(response);
       return data;
     } catch (error) {
-      logger.error('Create item failed:', error);
+      logger.error("Create item failed:", error);
       throw error;
     }
   },
@@ -109,7 +109,7 @@ export const exampleService = {
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/items/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: getApiHeaders(true),
         body: JSON.stringify(itemData),
       });
@@ -136,7 +136,7 @@ export const exampleService = {
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/items/${id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: getApiHeaders(true),
         body: JSON.stringify(partialData),
       });
@@ -163,7 +163,7 @@ export const exampleService = {
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/items/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: getApiHeaders(true),
       });
 
@@ -180,37 +180,37 @@ export const exampleService = {
   async uploadFile(file: File, metadata?: any): Promise<any> {
     // Demo mode
     if (isDemoMode()) {
-      logger.api('Uploading file (demo mode)');
+      logger.api("Uploading file (demo mode)");
       await simulateDelay();
-      return { uploadId: 'demo-upload', status: 'completed' };
+      return { uploadId: "demo-upload", status: "completed" };
     }
 
     // Live API mode
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      
+      formData.append("file", file);
+
       if (metadata) {
         Object.entries(metadata).forEach(([key, value]) => {
-          formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+          formData.append(
+            key,
+            typeof value === "object" ? JSON.stringify(value) : String(value)
+          );
         });
       }
 
       const headers: HeadersInit = {};
-      
-      // Add API key if configured
-      if (API_CONFIG.API_KEY) {
-        headers['X-API-Key'] = API_CONFIG.API_KEY;
-      }
-      
-      // Add auth token
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+
+      // Add Basic Auth if credentials are available
+      if (API_CONFIG.API_USERNAME && API_CONFIG.API_PASSWORD) {
+        const credentials = btoa(
+          `${API_CONFIG.API_USERNAME}:${API_CONFIG.API_PASSWORD}`
+        );
+        headers["Authorization"] = `Basic ${credentials}`;
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/items/upload`, {
-        method: 'POST',
+        method: "POST",
         headers,
         body: formData,
       });
@@ -218,7 +218,7 @@ export const exampleService = {
       const data = await handleApiResponse(response);
       return data;
     } catch (error) {
-      logger.error('Upload file failed:', error);
+      logger.error("Upload file failed:", error);
       throw error;
     }
   },
@@ -237,7 +237,7 @@ export const exampleService = {
     // Live API mode
     try {
       const params = new URLSearchParams({ q: query });
-      
+
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           params.append(key, String(value));
@@ -247,7 +247,7 @@ export const exampleService = {
       const response = await fetch(
         `${API_CONFIG.BASE_URL}/items/search?${params.toString()}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: getApiHeaders(true),
         }
       );
@@ -255,7 +255,7 @@ export const exampleService = {
       const data = await handleApiResponse(response);
       return data;
     } catch (error) {
-      logger.error('Search failed:', error);
+      logger.error("Search failed:", error);
       throw error;
     }
   },
@@ -263,9 +263,9 @@ export const exampleService = {
 
 /**
  * USAGE EXAMPLE IN COMPONENTS:
- * 
+ *
  * import { exampleService } from './lib/api/services/_example.service';
- * 
+ *
  * const handleCreate = async () => {
  *   try {
  *     const newItem = await exampleService.create({
@@ -277,7 +277,7 @@ export const exampleService = {
  *     console.error('Failed to create:', error);
  *   }
  * };
- * 
+ *
  * const handleList = async () => {
  *   try {
  *     const result = await exampleService.list(1, 20);

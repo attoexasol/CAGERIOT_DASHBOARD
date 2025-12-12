@@ -57,8 +57,27 @@
 
     server: {
       host: "0.0.0.0",
-      port: 3000,
+      port: 3001,
       open: true,
-    
+      proxy: {
+        '/api': {
+          target: 'https://openplay.attoexasolutions.com',
+          changeOrigin: true,
+          secure: true,
+          // Rewrite /api to /api so it forwards correctly
+          // /api/tracks/ → https://openplay.attoexasolutions.com/api/tracks/
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              console.log('Proxy error:', err);
+            });
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              console.log('📤 Proxying request:', req.method, req.url, '→', proxyReq.path);
+            });
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log('📥 Proxy response:', proxyRes.statusCode, req.url);
+            });
+          },
+        },
+      },
     },
   });

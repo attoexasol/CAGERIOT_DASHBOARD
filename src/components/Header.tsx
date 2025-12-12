@@ -17,7 +17,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
       {/* Mobile menu button */}
       <button
         onClick={onOpenMobileMenu}
-        className="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-800 hover:text-white lg:hidden flex-shrink-0"
+        className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white lg:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -36,10 +36,13 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 flex-shrink-0">
-        <Badge variant="secondary" className="hidden md:flex bg-[#ff0050]/10 text-[#ff0050] hover:bg-[#ff0050]/20 border-0 text-xs whitespace-nowrap">
+        <Badge
+          variant="secondary"
+          className="hidden md:flex bg-[#ff0050]/10 text-[#ff0050] hover:bg-[#ff0050]/20 border-0 text-xs whitespace-nowrap"
+        >
           Impersonating
         </Badge>
-        
+
         {/* <button
           onClick={() => setDarkMode(!darkMode)}
           className="hidden sm:flex rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
@@ -48,7 +51,9 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
         </button> */}
 
         <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 cursor-pointer border-2 border-[#ff0050] flex-shrink-0">
-          <AvatarFallback className="bg-[#ff0050] text-white text-xs sm:text-sm">G</AvatarFallback>
+          <AvatarFallback className="bg-[#ff0050] text-white text-xs sm:text-sm">
+            G
+          </AvatarFallback>
         </Avatar>
       </div>
     </header>

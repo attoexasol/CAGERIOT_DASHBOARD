@@ -7,15 +7,15 @@
 // import { LoginRequest, LoginResponse, User } from '../types';
 // import { isDemoMode } from '../../config';
 // import { logger } from '../../logger';
-// import { 
-//   getApiHeaders, 
-//   handleApiResponse, 
-//   setAuthToken 
+// import {
+//   getApiHeaders,
+//   handleApiResponse,
+//   setAuthToken
 // } from '../helpers';
-// import { 
-//   demoLoginResponse, 
-//   demoUser, 
-//   simulateDelay 
+// import {
+//   demoLoginResponse,
+//   demoUser,
+//   simulateDelay
 // } from '../demo-data';
 // import { demoStorage } from '../demo-storage';
 
@@ -28,14 +28,14 @@
 //     if (isDemoMode()) {
 //       logger.api('Login attempt (demo mode)');
 //       await simulateDelay();
-      
+
 //       // Simple demo validation
 //       if (emailArg === 'demo@cageriot.com' && passwordArg === 'demo123') {
 //         setAuthToken(demoLoginResponse.token);
 //         logger.success('Login successful (demo mode)');
 //         return demoLoginResponse;
 //       }
-      
+
 //       logger.error('Invalid demo credentials');
 //       throw new Error('Invalid credentials. Use demo@cageriot.com / demo123');
 //     }
@@ -43,7 +43,7 @@
 //     // Live API mode
 //     try {
 //       logger.api('Login attempt (live API)');
-      
+
 //       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
 //         method: 'POST',
 //         headers: {
@@ -56,12 +56,12 @@
 //       });
 
 //       const data = await handleApiResponse<LoginResponse>(response);
-      
+
 //       if (data.token) {
 //         setAuthToken(data.token);
 //         logger.success('Login successful (live API)');
 //       }
-      
+
 //       return data;
 //     } catch (error) {
 //       logger.error('Login failed:', error);
@@ -86,7 +86,7 @@
 //         method: 'POST',
 //         headers: getApiHeaders(true),
 //       });
-      
+
 //       await handleApiResponse(response);
 //     } catch (error) {
 //       logger.error('Logout failed:', error);
@@ -146,11 +146,11 @@
 //       });
 
 //       const result = await handleApiResponse<LoginResponse>(response);
-      
+
 //       if (result.token) {
 //         setAuthToken(result.token);
 //       }
-      
+
 //       return result;
 //     } catch (error) {
 //       logger.error('Registration failed:', error);
@@ -216,8 +216,8 @@
 //     if (isDemoMode()) {
 //       await simulateDelay();
 //       const currentUser = demoStorage.getUser() || demoUser;
-//       const updatedUser = { 
-//         ...currentUser, 
+//       const updatedUser = {
+//         ...currentUser,
 //         ...data,
 //         updatedAt: new Date().toISOString()
 //       };
@@ -272,73 +272,72 @@
 //   },
 // };
 
-
-
-
-
-
-
-
-
 /**
  * Authentication API Service
  * Supports both demo and live API modes
- * ✅ Updated: Always allow demo login even when using live API
+ * âœ… Updated: Always allow demo login even when using live API
  */
 
-import { API_CONFIG } from '../../config';
-import { LoginRequest, LoginResponse, User } from '../types';
-import { isDemoMode } from '../../config';
-import { logger } from '../../logger';
-import { 
-  getApiHeaders, 
-  handleApiResponse, 
-  setAuthToken 
-} from '../helpers';
-import { 
-  demoLoginResponse, 
-  demoUser, 
-  simulateDelay 
-} from '../demo-data';
-import { demoStorage } from '../demo-storage';
+import { API_CONFIG, getApiHeaders } from "../../config";
+import { LoginRequest, LoginResponse, User } from "../types";
+import { isDemoMode } from "../../config";
+import { logger } from "../../logger";
+import { handleApiResponse } from "../helpers";
+import { demoLoginResponse, demoUser, simulateDelay } from "../demo-data";
+import { demoStorage } from "../demo-storage";
+
+// Helper functions for token management
+function setAuthToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  if (token) {
+    localStorage.setItem("auth_token", token);
+  } else {
+    localStorage.removeItem("auth_token");
+  }
+}
+
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("auth_token");
+}
 
 export const authService = {
   /**
-   * ✅ LOGIN USER (Hybrid: works for both demo & live)
+   * âœ… LOGIN USER (Hybrid: works for both demo & live)
    */
   async login(emailArg: string, passwordArg: string): Promise<LoginResponse> {
-    // ✅ Always allow demo credentials regardless of mode
-    if (emailArg === 'demo@cageriot.com' && passwordArg === 'demo123') {
-      logger.api('Login as demo user (forced hybrid mode)');
+    // âœ… Always allow demo credentials regardless of mode
+    if (emailArg === "demo@cageriot.com" && passwordArg === "demo123") {
+      logger.api("Login as demo user (forced hybrid mode)");
       await simulateDelay(300); // small delay for realism
       setAuthToken(demoLoginResponse.token);
       demoStorage.setUser(demoUser);
-      logger.success('Login successful (demo user)');
+      logger.success("Login successful (demo user)");
       return demoLoginResponse;
     }
 
-    // 🧩 Keep existing demo mode logic (when explicitly in demo mode)
+    // ðŸ§© Keep existing demo mode logic (when explicitly in demo mode)
     if (isDemoMode()) {
-      logger.api('Login attempt (demo mode)');
+      logger.api("Login attempt (demo mode)");
       await simulateDelay();
-      
+
       // Simple demo validation
-      if (emailArg === 'demo@cageriot.com' && passwordArg === 'demo123') {
+      if (emailArg === "demo@cageriot.com" && passwordArg === "demo123") {
         setAuthToken(demoLoginResponse.token);
-        logger.success('Login successful (demo mode)');
+        logger.success("Login successful (demo mode)");
         return demoLoginResponse;
       }
-      
-      logger.error('Invalid demo credentials');
-      throw new Error('Invalid credentials. Use demo@cageriot.com / demo123');
+
+      logger.error("Invalid demo credentials");
+      throw new Error("Invalid credentials. Use demo@cageriot.com / demo123");
     }
 
-    // 🌍 Live API mode (unchanged)
+    // ðŸŒ Live API mode (unchanged)
     try {
-      logger.api('Login attempt (live API)');
-      
+      logger.api("Login attempt (live API)");
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
-        method: 'POST',
+        method: "POST",
         headers: {
           ...getApiHeaders(false),
         },
@@ -349,15 +348,15 @@ export const authService = {
       });
 
       const data = await handleApiResponse<LoginResponse>(response);
-      
+
       if (data.token) {
         setAuthToken(data.token);
-        logger.success('Login successful (live API)');
+        logger.success("Login successful (live API)");
       }
-      
+
       return data;
     } catch (error) {
-      logger.error('Login failed (live API):', error);
+      logger.error("Login failed (live API):", error);
       throw error;
     }
   },
@@ -376,13 +375,13 @@ export const authService = {
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/logout`, {
-        method: 'POST',
+        method: "POST",
         headers: getApiHeaders(true),
       });
-      
+
       await handleApiResponse(response);
     } catch (error) {
-      logger.error('Logout failed:', error);
+      logger.error("Logout failed:", error);
     } finally {
       setAuthToken(null);
     }
@@ -402,14 +401,14 @@ export const authService = {
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
-        method: 'GET',
+        method: "GET",
         headers: getApiHeaders(true),
       });
 
       const data = await handleApiResponse<User>(response);
       return data;
     } catch (error) {
-      logger.error('Get user failed:', error);
+      logger.error("Get user failed:", error);
       throw error;
     }
   },
@@ -426,26 +425,26 @@ export const authService = {
     // Demo mode
     if (isDemoMode()) {
       await simulateDelay();
-      throw new Error('Registration is not available in demo mode');
+      throw new Error("Registration is not available in demo mode");
     }
 
     // Live API mode
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/register`, {
-        method: 'POST',
+        method: "POST",
         headers: getApiHeaders(false),
         body: JSON.stringify(data),
       });
 
       const result = await handleApiResponse<LoginResponse>(response);
-      
+
       if (result.token) {
         setAuthToken(result.token);
       }
-      
+
       return result;
     } catch (error) {
-      logger.error('Registration failed:', error);
+      logger.error("Registration failed:", error);
       throw error;
     }
   },
@@ -456,19 +455,22 @@ export const authService = {
   async forgotPassword(email: string): Promise<void> {
     if (isDemoMode()) {
       await simulateDelay();
-      throw new Error('Password reset is not available in demo mode');
+      throw new Error("Password reset is not available in demo mode");
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: getApiHeaders(false),
-        body: JSON.stringify({ email }),
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: getApiHeaders(false),
+          body: JSON.stringify({ email }),
+        }
+      );
 
       await handleApiResponse(response);
     } catch (error) {
-      logger.error('Forgot password failed:', error);
+      logger.error("Forgot password failed:", error);
       throw error;
     }
   },
@@ -479,19 +481,22 @@ export const authService = {
   async resetPassword(token: string, password: string): Promise<void> {
     if (isDemoMode()) {
       await simulateDelay();
-      throw new Error('Password reset is not available in demo mode');
+      throw new Error("Password reset is not available in demo mode");
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: getApiHeaders(false),
-        body: JSON.stringify({ token, password }),
-      });
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/auth/reset-password`,
+        {
+          method: "POST",
+          headers: getApiHeaders(false),
+          body: JSON.stringify({ token, password }),
+        }
+      );
 
       await handleApiResponse(response);
     } catch (error) {
-      logger.error('Reset password failed:', error);
+      logger.error("Reset password failed:", error);
       throw error;
     }
   },
@@ -503,19 +508,19 @@ export const authService = {
     if (isDemoMode()) {
       await simulateDelay();
       const currentUser = demoStorage.getUser() || demoUser;
-      const updatedUser = { 
-        ...currentUser, 
+      const updatedUser = {
+        ...currentUser,
         ...data,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       demoStorage.setUser(updatedUser);
-      logger.success('Profile updated (demo mode)');
+      logger.success("Profile updated (demo mode)");
       return updatedUser;
     }
 
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/profile`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: getApiHeaders(true),
         body: JSON.stringify(data),
       });
@@ -523,7 +528,7 @@ export const authService = {
       const result = await handleApiResponse<User>(response);
       return result;
     } catch (error) {
-      logger.error('Update profile failed:', error);
+      logger.error("Update profile failed:", error);
       throw error;
     }
   },
@@ -536,21 +541,21 @@ export const authService = {
       await simulateDelay();
       demoStorage.setUser(null);
       setAuthToken(null);
-      logger.success('Account deleted (demo mode)');
+      logger.success("Account deleted (demo mode)");
       return;
     }
 
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/account`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: getApiHeaders(true),
       });
 
       await handleApiResponse(response);
       setAuthToken(null);
-      logger.success('Account deleted');
+      logger.success("Account deleted");
     } catch (error) {
-      logger.error('Delete account failed:', error);
+      logger.error("Delete account failed:", error);
       throw error;
     }
   },

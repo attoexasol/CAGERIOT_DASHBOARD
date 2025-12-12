@@ -1,42 +1,59 @@
 /**
- * Logger Utility
- * Provides consistent logging with mode awareness
+ * Simple logger utility - just wraps console methods
+ * No complex initialization or network calls
  */
 
-import { isDemoMode } from './config';
-
-const styles = {
-  demo: 'background: #fbbf24; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-  live: 'background: #10b981; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-  api: 'background: #ff0050; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-  info: 'background: #3b82f6; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-  success: 'background: #10b981; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-  error: 'background: #ef4444; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: bold;',
-};
-
 class Logger {
-  private mode = isDemoMode() ? 'DEMO' : 'LIVE';
-  private modeStyle = isDemoMode() ? styles.demo : styles.live;
-
-  api(message: string, ...args: any[]) {
-    console.log(`%c${this.mode}%c API`, this.modeStyle, styles.api, message, ...args);
+  log(message: string, ...args: any[]) {
+    console.log(message, ...args);
   }
 
   info(message: string, ...args: any[]) {
-    console.log(`%c${this.mode}%c INFO`, this.modeStyle, styles.info, message, ...args);
-  }
-
-  success(message: string, ...args: any[]) {
-    console.log(`%c${this.mode}%c SUCCESS`, this.modeStyle, styles.success, message, ...args);
-  }
-
-  error(message: string, ...args: any[]) {
-    console.error(`%c${this.mode}%c ERROR`, this.modeStyle, styles.error, message, ...args);
+    console.info(message, ...args);
   }
 
   warn(message: string, ...args: any[]) {
-    console.warn(`%c${this.mode}%c WARN`, this.modeStyle, 'background: #f59e0b; color: #000; padding: 2px 6px; border-radius: 3px; font-weight: bold;', message, ...args);
+    console.warn(message, ...args);
+  }
+
+  error(message: string, ...args: any[]) {
+    console.error(message, ...args);
+  }
+
+  success(message: string, data?: any) {
+    console.log('✅', message, data || '');
+  }
+
+  api(message: string, ...args: any[]) {
+    console.log('[API]', message, ...args);
+  }
+
+  // Special formatted logs for track creation
+  trackCreation(payload: any) {
+    console.log('🚀 Creating track', payload);
+  }
+
+  trackCreated(result: any) {
+    console.log('✅ Track created', result);
+  }
+
+  audioUpload(url: string, file: File) {
+    console.log('📤 Uploading audio file', {
+      url,
+      fileName: file.name,
+      fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      fileType: file.type,
+    });
+  }
+
+  audioUploaded(result: any) {
+    console.log('✅ Audio uploaded', result);
+  }
+
+  errorOccurred(error: any, context: string) {
+    console.error(`❌ ${context} failed:`, error);
   }
 }
 
+// Create logger instance - simple, no complex initialization
 export const logger = new Logger();

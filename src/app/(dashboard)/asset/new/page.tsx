@@ -17,7 +17,6 @@ import {
 } from "../../../../components/ui/select";
 import { Textarea } from "../../../../components/ui/textarea";
 import { releasesService } from "../../../../lib/api";
-import { logger } from "../../../../lib/logger";
 
 // Router handling for Next.js or React Router
 const isNextJs =
@@ -94,14 +93,14 @@ export default function NewAsset() {
       };
 
       const data = await releasesService.create(payload);
-      logger.log("Release created:", data);
+      console.log("Release created:", data);
       toast.success("Release created successfully!");
 
       if (router) router.push("/releases");
       else if (navigate) navigate("/releases");
       else window.location.href = "/releases";
     } catch (error: any) {
-      logger.error("Create release failed:", error.message || error);
+      console.error("Create release failed:", error.message || error);
       toast.error(error.message || "Failed to create release");
     } finally {
       setLoading(false);

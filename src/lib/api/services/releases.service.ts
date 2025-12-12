@@ -1,4 +1,3 @@
-
 import { API_CONFIG, isDemoMode } from "../../config";
 import { Release, CreateReleaseRequest, ListParams } from "../types";
 import { logger } from "../../logger";
@@ -7,38 +6,146 @@ import { demoReleases, simulateDelay } from "../demo-data";
 import { demoStorage } from "../demo-storage";
 
 /**
- * Normalize RightsHub API release into your Release interface
- * (IMAGE FIX ADDED HERE)
+ * Normalize API release response
+ * API returns minimal data: { id, title, upc }
  */
-function normalizeRelease(item: any): Release {
+// function normalizeRelease(item: any): Release {
+//   const isrc = item?.discs?.[0]?.disc_tracks?.[0]?.track?.isrc || null;
+//  const trackSongs =
+//    item.discs?.flatMap((disc: any) =>
+//      disc.disc_tracks?.map((dt: any) => ({
+//        id: dt.track?.id || null,
+//        title: dt.track?.title || null,
+//        isrc: dt.track?.isrc || null,
+//        artist_display_name: dt.track?.artist_display_name || null,
+//        duration: dt.track?.duration || null,
+//        genre: dt.track?.genre || null,
+//        label: dt.track?.label || null,
+//        raw: dt.track || null, 
+//      }))
+//    ) || [];
+//   return {
+//     ...item,
+//     id: String(item.id),
+//     title: item.title || "Untitled",
+//     artist: item.artist || "Unknown Artist",
+//     artistId: item.artistId || "",
+//     type: item.type || "Album",
+//     releaseDate: item.releaseDate || "",
+//     description: item.description || "",
+//     coverArt: item.coverArt || "/no-image.png",
+//     upc: item.upc || "",
+//     createdAt: item.createdAt || new Date().toISOString(),
+//     updatedAt: item.updatedAt || new Date().toISOString(),
+//     status: item.status,
+//     isrc: isrc,
+//     configuration: item.configuration,
+//     metadata_language: item.metadata_language,
+//     release_date: item.release_date,
+//     label: item.label
+//       ? {
+//           id: item.label.id,
+//           name: item.label.name,
+//         }
+//       : null,
+//     version: item.version,
+//     pline_year: item.pline_year,
+//     cline_year: item.cline_year,
+//     genre: item.genre,
+//     trackSongs,
+//   };
+// }
+// inside src/lib/api/services/releases.service.ts
+
+function normalizeRelease(item: any, isMinimal: boolean = false): any {
+  // Handle minimal API response (from list endpoint: only id, title, upc)
+  if (isMinimal || (!item.discs && !item.artist && !item.release_date)) {
+    return {
+      id: String(item.id),
+      title: item.title || "Untitled",
+      artist: item.artist || "Unknown Artist",
+      artistId: item.artistId || "",
+      type: item.type || "Album",
+      releaseDate: item.release_date ?? item.releaseDate ?? "",
+      description: item.description ?? "",
+      coverArt: item.coverArt || "/no-image.png",
+      upc: item.upc ?? "",
+      createdAt: item.created_at ?? item.createdAt ?? new Date().toISOString(),
+      updatedAt: item.updated_at ?? item.updatedAt ?? new Date().toISOString(),
+      status: item.status ?? "",
+      configuration: item.configuration ?? "",
+      isrc: item.isrc ?? "",
+      metadata_language: item.metadata_language ?? "",
+      release_date: item.release_date ?? "",
+      label: item.label ? { id: item.label.id, name: item.label.name } : null,
+      version: item.version ?? "",
+      cline_year: item.cline_year ?? "",
+      pline_year: item.pline_year ?? "",
+      genre: item.genre ?? "",
+      trackSongs: [],
+      _raw: item,
+    };
+  }
+
+  // Build trackSongs from nested discs -> disc_tracks -> track
+  const trackSongs =
+    item?.discs?.flatMap((disc: any) =>
+      (disc?.disc_tracks || []).map((dt: any) => {
+        const t = dt?.track;
+        if (!t) return null;
+        return {
+          id: t.id ?? null,
+          title: t.title ?? null,
+          isrc: t.isrc ?? null,
+          artist_display_name: t.artist_display_name ?? null,
+          duration: t.duration ?? null,
+          genre: t.genre ?? null,
+          label: t.label ?? null,
+          raw: t ?? null,
+        };
+      })
+    ).filter(Boolean) || [];
+
+  const firstIsrc = trackSongs.length > 0 ? trackSongs[0].isrc : null;
+
   return {
-    id: item._id,
+    // original normalized fields (keep as your Release type expects)
+    id: String(item.id),
     title: item.title || "Untitled",
-    artist: item.artistDisplayName || (item.primaryArtists?.[0] ?? "Unknown"),
-    artistId: item.accountId || "",
+    artist: item.artist || item.artist_display_name || "Unknown Artist",
+    artistId: item.artistId || "",
+    type: item.type || "Album",
+    releaseDate: item.release_date ?? item.releaseDate ?? "",
+    description: item.internal_synopsis ?? item.description ?? "",
+    coverArt:
+      (item.cover_art?.id ? (item.cover_art as any) : null) ||
+      item.coverArt ||
+      "/no-image.png",
+    upc: item.upc ?? "",
+    createdAt: item.created_at ?? item.createdAt ?? new Date().toISOString(),
+    updatedAt: item.updated_at ?? item.updatedAt ?? new Date().toISOString(),
 
-    type:
-      (item.format === "Album" && "Album") ||
-      (item.format === "Single" && "Single") ||
-      (item.format === "EP" && "EP") ||
-      "Album",
-
-    releaseDate: item.releaseDate || "",
-    description: item.description || "",
-
-    //  FIXED IMAGE (always works)
-    coverArt: item._id
-      ? `https://packshot.rightshub.net/${item._id}`
-      : "/no-image.png",
-
-    createdAt: item.createdAt || "",
-    updatedAt: item.updatedAt || "",
+    // extra data from raw API
+    status: item.status ?? null,
+    configuration: item.configuration ?? null,
+    metadata_language: item.metadata_language ?? null,
+    genre: item.genre ?? null,
+    version: item.version ?? null,
+    pline_year: item.pline_year ?? null,
+    cline_year: item.cline_year ?? null,
+    label: item.label ? { id: item.label.id, name: item.label.name } : null,
+    release_date: item.release_date,
+    // tracks
+    trackSongs,
+    isrc: firstIsrc,
+    // keep original raw object in case you need it:
+    _raw: item,
   };
 }
 
 export const releasesService = {
   /**
-   * GET ALL RELEASES (RightsHub)
+   * GET ALL RELEASES
    */
   async getAll(params?: ListParams): Promise<{
     data: Release[];
@@ -86,31 +193,52 @@ export const releasesService = {
 
     // Live API mode
     try {
-      const url = `${API_CONFIG.BASE_URL}/releases/searchReleases`;
+      // Get or create token
+      let token = localStorage.getItem("authToken");
+
+      if (!token) {
+        const username = import.meta.env.VITE_API_USERNAME;
+        const password =
+          import.meta.env.VITE_API_PASSWORD;
+        token = btoa(`${username}:${password}`);
+        localStorage.setItem("authToken", token);
+        console.log("✅ Token created and stored in localStorage");
+      }
+
+      // Build URL using BASE_URL from config
+    let url = `${API_CONFIG.BASE_URL}/releases`;
+
 
       const response = await fetch(url, {
         method: "GET",
-        headers: getApiHeaders(false),
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
       });
 
-      const data = await handleApiResponse(response);
-
-      const releases: Release[] = Array.isArray(data.results)
-        ? data.results.map(normalizeRelease)
-        : [];
-
-      if (params?.search) {
-        const q = params.search.toLowerCase();
-        return {
-          data: releases.filter(
-            (r) =>
-              r.title.toLowerCase().includes(q) ||
-              r.artist.toLowerCase().includes(q)
-          ),
-        };
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
-      return { data: releases };
+      const data = await response.json();
+      console.log("📦 API Response:", data);
+      // Handle the API response structure: { results: [...], current_page, total_results, ... }
+      const releases: Release[] = Array.isArray(data.results)
+        ? data.results.map((item: any) => normalizeRelease(item, true)) // Use minimal normalization for list endpoint
+        : [];
+
+      console.log(`✅ Normalized ${releases.length} releases`);
+
+      const pagination = {
+        page: data.current_page || 1,
+        limit: params?.limit || 10,
+        total: data.total_results || releases.length,
+        totalPages: Math.ceil((data.total_results || releases.length) / (params?.limit || 10)),
+      };
+
+      return { data: releases, pagination };
     } catch (error) {
       logger.error("Get releases failed:", error);
       throw error;
@@ -118,7 +246,7 @@ export const releasesService = {
   },
 
   /**
-   * GET RELEASE DETAILS (RightsHub)
+   * GET RELEASE BY ID
    */
   async getById(releaseId: string): Promise<any> {
     if (isDemoMode()) {
@@ -135,16 +263,37 @@ export const releasesService = {
     }
 
     try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/releases/getRelease?releaseId=${releaseId}`,
-        {
-          method: "GET",
-          headers: getApiHeaders(true),
-        }
-      );
+      let token = localStorage.getItem("authToken");
 
-      const data = await handleApiResponse(response);
-      return data;
+      if (!token) {
+        const username = import.meta.env.VITE_API_USERNAME;
+        const password =
+          import.meta.env.VITE_API_PASSWORD;
+        token = btoa(`${username}:${password}`);
+        localStorage.setItem("authToken", token);
+      }
+
+      const url = `${API_CONFIG.BASE_URL}/releases/${releaseId}`;
+
+      console.log("📡 Fetching release from:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch release: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data)
+
+      return normalizeRelease(data);
     } catch (error) {
       logger.error(`Get release ${releaseId} failed:`, error);
       throw error;
@@ -155,17 +304,54 @@ export const releasesService = {
    * CREATE RELEASE
    */
   async create(releaseData: CreateReleaseRequest): Promise<Release> {
-    try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}/releases/createRelease`,
-        {
-          method: "POST",
-          headers: getApiHeaders(true),
-          body: JSON.stringify(releaseData),
-        }
-      );
+    if (isDemoMode()) {
+      logger.api("Creating release (demo mode)");
+      await simulateDelay();
 
-      return await handleApiResponse(response);
+      const newRelease: Release = {
+        id: `demo-${Date.now()}`,
+        ...releaseData,
+        artist: "Demo Artist",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      demoStorage.create("releases", newRelease);
+      return newRelease;
+    }
+
+    try {
+      let token = localStorage.getItem("authToken");
+
+      if (!token) {
+        const username = import.meta.env.VITE_API_USERNAME || "EJLLN8KJ";
+        const password =
+          import.meta.env.VITE_API_PASSWORD ||
+          "0cb81fba-adba-4942-ae0f-d2f577571dde";
+        token = btoa(`${username}:${password}`);
+        localStorage.setItem("authToken", token);
+      }
+
+      const url = `${API_CONFIG.BASE_URL}/releases`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
+        body: JSON.stringify(releaseData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create release: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ API Response:", data);
+
+      return normalizeRelease(data);
     } catch (error) {
       logger.error("Create release failed:", error);
       throw error;
@@ -202,13 +388,37 @@ export const releasesService = {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/releases/${id}`, {
+      let token = localStorage.getItem("authToken");
+
+      if (!token) {
+        const username = import.meta.env.VITE_API_USERNAME || "EJLLN8KJ";
+        const password =
+          import.meta.env.VITE_API_PASSWORD ||
+          "0cb81fba-adba-4942-ae0f-d2f577571dde";
+        token = btoa(`${username}:${password}`);
+        localStorage.setItem("authToken", token);
+      }
+
+      const url = `${API_CONFIG.BASE_URL}/releases/${id}`;
+
+      const response = await fetch(url, {
         method: "PUT",
-        headers: getApiHeaders(true),
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
         body: JSON.stringify(releaseData),
       });
 
-      return await handleApiResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to update release: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ API Response:", data);
+
+      return normalizeRelease(data);
     } catch (error) {
       logger.error(`Update release ${id} failed:`, error);
       throw error;
@@ -227,12 +437,33 @@ export const releasesService = {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/releases/${id}`, {
+      let token = localStorage.getItem("authToken");
+
+      if (!token) {
+        const username = import.meta.env.VITE_API_USERNAME || "EJLLN8KJ";
+        const password =
+          import.meta.env.VITE_API_PASSWORD ||
+          "0cb81fba-adba-4942-ae0f-d2f577571dde";
+        token = btoa(`${username}:${password}`);
+        localStorage.setItem("authToken", token);
+      }
+
+      const url = `${API_CONFIG.BASE_URL}/releases/${id}`;
+
+      const response = await fetch(url, {
         method: "DELETE",
-        headers: getApiHeaders(true),
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
       });
 
-      await handleApiResponse(response);
+      if (!response.ok) {
+        throw new Error(`Failed to delete release: ${response.status}`);
+      }
+
+      console.log("✅ Release deleted successfully");
     } catch (error) {
       logger.error(`Delete release ${id} failed:`, error);
       throw error;

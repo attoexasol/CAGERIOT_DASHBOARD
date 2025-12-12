@@ -73,7 +73,7 @@
 //           <Route path="/payouts" element={<DashboardLayout><Payouts /></DashboardLayout>} />
 //           <Route path="/payouts/new" element={<DashboardLayout><NewPayout /></DashboardLayout>} />
 //           <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
-          
+
 //           {/* Catch all */}
 //           <Route path="*" element={<Navigate to="/" replace />} />
 //         </Routes>
@@ -84,52 +84,51 @@
 //   );
 // }
 
-
-
-
 // src/App.jsx
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { Toaster } from './components/ui/sonner';
-import { ApiStatus } from './components/ApiStatus';
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { ApiStatus } from "./components/ApiStatus";
+import { Toaster } from "./components/ui/sonner";
 
 // Auth
-import Login from './app/page';                  // src/app/page.jsx
-import Register from './app/register/page';      // src/app/register/page.jsx
-import ForgotPassword from './app/forgot-password/page';
+import ForgotPassword from "./app/forgot-password/page";
+import Login from "./app/page"; // src/app/page.jsx
+import Register from "./app/register/page"; // src/app/register/page.jsx
 
 // Dashboard Layout & Pages
-import DashboardLayout from './app/(dashboard)/layout';
-import Dashboard from './app/(dashboard)/dashboard/page';
-import Releases from './app/(dashboard)/releases/page';
-import NewRelease from './app/(dashboard)/releases/new/page';
-import Asset from "./app/(dashboard)/asset/page";
-import NewAsset from "./app/(dashboard)/asset/new/page";
-import Artists from './app/(dashboard)/artists/page';
-import NewArtist from './app/(dashboard)/artists/new/page';
-import Tracks from './app/(dashboard)/tracks/page';
-import NewTrack from './app/(dashboard)/tracks/new/page';
-import Videos from './app/(dashboard)/videos/page';
-import NewVideo from './app/(dashboard)/videos/new/page';
-import Performers from './app/(dashboard)/performers/page';
-import NewPerformer from './app/(dashboard)/performers/new/page';
-import Producers from './app/(dashboard)/producers/page';
-import NewProducer from './app/(dashboard)/producers/new/page';
-import Writers from './app/(dashboard)/writers/page';
-import NewWriter from './app/(dashboard)/writers/new/page';
-import Publishers from './app/(dashboard)/publishers/page';
-import NewPublisher from './app/(dashboard)/publishers/new/page';
-import Labels from './app/(dashboard)/labels/page';
-import NewLabel from './app/(dashboard)/labels/new/page';
-import Royalties from './app/(dashboard)/royalties/page';
-import Payouts from './app/(dashboard)/payouts/page';
-import NewPayout from './app/(dashboard)/payouts/new/page';
-import Settings from './app/(dashboard)/settings/page';
-import ReleaseDetails from "./components/ReleaseDetails"; // detail component
+import NewArtist from "./app/(dashboard)/artists/new/page";
+import Artists from "./app/(dashboard)/artists/page";
+import Dashboard from "./app/(dashboard)/dashboard/page";
+import NewLabel from "./app/(dashboard)/labels/new/page";
+import Labels from "./app/(dashboard)/labels/page";
+import DashboardLayout from "./app/(dashboard)/layout";
+import NewPayout from "./app/(dashboard)/payouts/new/page";
+import Payouts from "./app/(dashboard)/payouts/page";
+import NewPerformer from "./app/(dashboard)/performers/new/page";
+import Performers from "./app/(dashboard)/performers/page";
+import NewProducer from "./app/(dashboard)/producers/new/page";
+import Producers from "./app/(dashboard)/producers/page";
+import NewPublisher from "./app/(dashboard)/publishers/new/page";
+import Publishers from "./app/(dashboard)/publishers/page";
+import AudioFiles from "./app/(dashboard)/releases/[id]/AudioFiles";
+import ReleaseDistrubutesPage from "./app/(dashboard)/releases/[id]/Distributes";
 import ReleaseDetailsLayout from "./app/(dashboard)/releases/[id]/layout";
 import Metadata from "./app/(dashboard)/releases/[id]/Metadata";
 import Overview from "./app/(dashboard)/releases/[id]/Overview";
+import TracksSong from "./app/(dashboard)/releases/[id]/TracksSong";
+import NewRelease from "./app/(dashboard)/releases/new/page";
+import Releases from "./app/(dashboard)/releases/page";
+import Royalties from "./app/(dashboard)/royalties/page";
+import Settings from "./app/(dashboard)/settings/page";
+import NewTrack from "./app/(dashboard)/tracks/new/page";
+import Tracks from "./app/(dashboard)/tracks/page";
+import TrackDetailPage from "./app/(dashboard)/tracks/[id]/page";
+import TrackDetailsPage from "./app/(dashboard)/tracks/[id]/details/page";
+import TrackAudioPage from "./app/(dashboard)/tracks/[id]/audio/page";
+import NewVideo from "./app/(dashboard)/videos/new/page";
+import Videos from "./app/(dashboard)/videos/page";
+import NewWriter from "./app/(dashboard)/writers/new/page";
+import Writers from "./app/(dashboard)/writers/page";
 
 export default function App() {
   return (
@@ -154,7 +153,9 @@ export default function App() {
           <Route path="/releases/:id/*" element={<ReleaseDetailsLayout />}>
             <Route path="overview" element={<Overview />} />
             <Route path="metadata" element={<Metadata />} />
-            {/* <Route path="tracks" element={<Tracks />} /> */}
+            <Route path="tracks_song" element={<TracksSong />} />
+            <Route path="audio" element={<AudioFiles />} />
+            <Route path="distribution" element={<ReleaseDistrubutesPage />} />
             {/* <Route path="distribution" element={<Distribution />} />
             <Route path="track-splits" element={<TrackSplits />} /> */}
 
@@ -229,6 +230,18 @@ export default function App() {
               </DashboardLayout>
             }
           />
+          <Route
+            path="/tracks/:id/*"
+            element={
+              <DashboardLayout>
+                <TrackDetailPage />
+              </DashboardLayout>
+            }
+          >
+            <Route path="details" element={<TrackDetailsPage />} />
+            <Route path="audio" element={<TrackAudioPage />} />
+            <Route index element={<TrackDetailsPage />} />
+          </Route>
           <Route
             path="/videos"
             element={

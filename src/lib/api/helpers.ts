@@ -1,13 +1,14 @@
 /**
  * API Helper Functions
- * Utilities for making API requests with proper headers and response handling
+ * Utilities for making API requests with Basic Auth and proper response handling
  */
 
 import { API_CONFIG } from "../config";
 import { logger } from "../logger";
 
 /**
- * Get authentication token from localStorage
+ * Get authentication token from localStorage (for backward compatibility)
+ * Note: We're using Basic Auth now, but keeping this for compatibility
  */
 export function getAuthToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -15,7 +16,8 @@ export function getAuthToken(): string | null {
 }
 
 /**
- * Set authentication token in localStorage
+ * Set authentication token in localStorage (for backward compatibility)
+ * Note: We're using Basic Auth now, but keeping this for compatibility
  */
 export function setAuthToken(token: string | null): void {
   if (typeof window === "undefined") return;
@@ -28,27 +30,20 @@ export function setAuthToken(token: string | null): void {
 }
 
 /**
- * Get API headers
+ * Get API headers with Basic Auth
  * @param includeAuth - Whether to include Authorization header
  */
 export function getApiHeaders(includeAuth: boolean = true): HeadersInit {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
-    "apikey": `${API_CONFIG.API_KEY}`,
-    "version": "2",
   };
 
-  // Add API key if configured and in live mode
-  if (API_CONFIG.USE_LIVE_API && API_CONFIG.API_KEY) {
-    headers["apikey"] = API_CONFIG.API_KEY;
-  }
-
-  // Add auth token if requested
-  if (includeAuth) {
-    const token = getAuthToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
+  // Add Basic Auth if credentials are available and auth is requested
+  if (includeAuth && API_CONFIG.API_USERNAME && API_CONFIG.API_PASSWORD) {
+    const credentials = btoa(
+      `${API_CONFIG.API_USERNAME}:${API_CONFIG.API_PASSWORD}`
+    );
+    headers["Authorization"] = `Basic ${credentials}`;
   }
 
   return headers;
@@ -89,10 +84,9 @@ export function handleApiError(error: any): never {
 
   // Check if user is unauthorized
   if (error.status === 401) {
-    // Clear token and redirect to login
-    setAuthToken(null);
+    // Redirect to login or show error
     if (typeof window !== "undefined") {
-      window.location.href = "/";
+      console.error("Authentication failed. Please check your credentials.");
     }
   }
 
@@ -204,7 +198,7 @@ export async function apiDelete<T = any>(endpoint: string): Promise<T> {
 }
 
 /**
- * Upload file
+ * Upload file with Basic Auth
  */
 export async function apiUpload<T = any>(
   endpoint: string,
@@ -226,14 +220,12 @@ export async function apiUpload<T = any>(
 
     const headers: HeadersInit = {};
 
-    // Add API key if in live mode
-    if (API_CONFIG.USE_LIVE_API && API_CONFIG.API_KEY) {
-      headers["X-API-Key"] = API_CONFIG.API_KEY;
-    }
-
-    const token = getAuthToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    // Add Basic Auth
+    if (API_CONFIG.API_USERNAME && API_CONFIG.API_PASSWORD) {
+      const credentials = btoa(
+        `${API_CONFIG.API_USERNAME}:${API_CONFIG.API_PASSWORD}`
+      );
+      headers["Authorization"] = `Basic ${credentials}`;
     }
 
     const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
