@@ -69,9 +69,7 @@
       "scripts": {
             "dev": "vite",
             "build": "vite build",
-            "start": "node server.js",
-            "log-server": "node scripts/log-server.js",
-            "dev:with-logs": "concurrently \"npm run dev\" \"npm run log-server\""
+            "start": "node server.js"
       },
       "description": "This is a code bundle for Design Dark-Themed Dashboard UI. The original project is available at https://www.figma.com/design/KlmkD4tB805EAYt9kQxRzK/Design-Dark-Themed-Dashboard-UI.",
       "main": "server.js",

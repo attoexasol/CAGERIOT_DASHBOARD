@@ -300,7 +300,7 @@ export default function NewTrackPage() {
     setLoading(true);
 
     try {
-      // Validation - Only Track Title and Audio File are mandatory
+      // Validation
       if (!audioFile) {
         toast.error("Please upload an audio file");
         setLoading(false);
@@ -313,64 +313,74 @@ export default function NewTrackPage() {
         return;
       }
 
-      // Prepare track data according to API specification
-      // Only include isrc if user selected "Yes"
+      // Prepare track data - only send title, track_type, and conditional isrc
       const trackData: any = {
         title: trackTitle.trim(),
         track_type: "audio",
       };
 
-      // Only include ISRC if user selected "Yes" and provided a value
+      // Only include ISRC if user selected "Yes"
       if (hasIsrc === true && isrc.trim()) {
         trackData.isrc = isrc.trim();
       }
-      // If hasIsrc is false or null, do not include isrc in the payload
+      // If hasIsrc is false or null, do not include isrc in the request
 
-      console.log("========================================");
-      console.log("🚀 CREATING TRACK");
-      console.log("========================================");
-      console.log("📤 Request Payload:", JSON.stringify(trackData, null, 2));
-      console.log("📋 Track Title:", trackTitle.trim());
-      console.log("🎵 Track Type: audio");
-      console.log("🔢 Has ISRC:", hasIsrc);
-      console.log("📝 ISRC Value:", hasIsrc === true ? isrc.trim() : "Not included");
-      console.log("📁 Audio File:", {
-        name: audioFile?.name,
-        size: `${(audioFile?.size || 0) / (1024 * 1024)} MB`
-      });
-      console.log("========================================");
-
-      // Create track using tracksService
-      const result = await tracksService.create(trackData);
+      // Call the API directly
+      const API_URL = `${API_CONFIG.BASE_URL}/tracks`;
+      const API_USERNAME = API_CONFIG.USERNAME;
+      const API_PASSWORD = API_CONFIG.PASSWORD;
       
-      console.log("✅ Track created successfully!");
-      console.log("📥 Response Data:", JSON.stringify(result, null, 2));
-      console.log("🆔 Track ID:", result?.id);
-      console.log("========================================");
+      // Create Basic Auth token
+      const token = btoa(`${API_USERNAME}:${API_PASSWORD}`);
+
+      console.log("Creating track with payload:", trackData);
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
+        body: JSON.stringify(trackData),
+      });
+
+      const responseText = await response.text();
+      let responseData: any = {};
+
+      try {
+        responseData = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        console.error("Failed to parse response:", responseText);
+        if (!response.ok) {
+          throw new Error(responseText || `Failed to create track: ${response.status}`);
+        }
+      }
+
+      if (!response.ok) {
+        const errorMessage = 
+          responseData.message || 
+          responseData.error || 
+          responseData.detail ||
+          `Failed to create track: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      console.log("Track created successfully:", responseData);
 
       // Upload audio file if track was created successfully
-      if (result?.id && audioFile) {
+      if (responseData?.id && audioFile) {
         try {
-          // Get the track ID from the response
-          const trackId = result.id;
+          const trackId = responseData.id;
           
-          console.log("========================================");
-          console.log("📤 UPLOADING AUDIO FILE");
-          console.log("========================================");
-          console.log("📁 File Name:", audioFile.name);
-          console.log("📊 File Size:", (audioFile.size / (1024 * 1024)).toFixed(2), "MB");
-          console.log("📋 File Type:", audioFile.type);
-          console.log("🆔 Track ID:", trackId);
-          console.log("========================================");
+          console.log("Requesting pre-signed upload URL for track:", trackId);
 
-          // Step 1: Request a pre-signed URL from the API
+          // Step 1: Request a pre-signed upload URL
           const presignedUrlEndpoint = `${API_CONFIG.BASE_URL}/tracks/${trackId}/presigned_url/`;
-          const token = btoa(`${API_CONFIG.USERNAME}:${API_CONFIG.PASSWORD}`);
-
-          console.log("🔗 Step 1: Requesting pre-signed URL from:", presignedUrlEndpoint);
-
+          
           const presignedResponse = await fetch(presignedUrlEndpoint, {
             method: "GET",
+            mode: "cors",
             headers: {
               Authorization: `Basic ${token}`,
             },
@@ -378,112 +388,81 @@ export default function NewTrackPage() {
 
           if (!presignedResponse.ok) {
             const errorText = await presignedResponse.text();
-            console.error("❌ Failed to get pre-signed URL:", errorText);
-            throw new Error(`Failed to get pre-signed URL (${presignedResponse.status}): ${errorText}`);
+            console.error("Failed to get pre-signed URL:", errorText);
+            throw new Error(`Failed to get pre-signed upload URL: ${presignedResponse.status}`);
           }
 
           const presignedData = await presignedResponse.json();
-          console.log("✅ Step 1: Received pre-signed URL response");
-          console.log("📥 Pre-signed Data:", JSON.stringify(presignedData, null, 2));
+          console.log("Pre-signed upload data:", presignedData);
 
-          // Step 2: Upload file directly to S3 using pre-signed URL and fields
-          const s3Url = presignedData.url;
-          const fields = presignedData.fields || {};
-
-          console.log("🔗 Step 2: Uploading to S3 URL:", s3Url);
-          console.log("📋 S3 Fields:", JSON.stringify(fields, null, 2));
-
-          // Create FormData with all required fields
+          // Step 2 & 3: Upload file to pre-signed URL with all required fields
+          const uploadUrl = presignedData.url;
           const uploadFormData = new FormData();
-          
-          // Add all pre-signed fields, replacing ${filename} placeholder if present
-          Object.keys(fields).forEach((key) => {
-            let value = fields[key];
-            // Replace ${filename} placeholder with actual filename if present
-            if (typeof value === 'string' && value.includes('${filename}')) {
-              value = value.replace('${filename}', audioFile.name);
-            }
-            uploadFormData.append(key, value);
-          });
 
-          // Add the file - must be last field in FormData for S3
-          uploadFormData.append("file", audioFile);
-
-          // Step 3: Upload directly to S3
-          const uploadResponse = await fetch(s3Url, {
-            method: "POST",
-            body: uploadFormData,
-            // Don't set Content-Type - browser will set it with boundary for multipart/form-data
-          });
-
-          console.log("📡 Step 3: Upload Response Status:", uploadResponse.status, uploadResponse.statusText);
-
-          if (!uploadResponse.ok) {
-            let errorText = "";
-            try {
-              errorText = await uploadResponse.text();
-              console.error("❌ Upload Error Response:", errorText);
-            } catch (e) {
-              console.error("❌ Could not read error response");
-            }
-            
-            const errorMessage = errorText || uploadResponse.statusText || "Unknown error";
-            console.error("❌ Full Error Details:", {
-              status: uploadResponse.status,
-              statusText: uploadResponse.statusText,
-              s3Url: s3Url,
-              errorText: errorText,
+          // Add all fields from the pre-signed response (in the same order)
+          if (presignedData.fields) {
+            Object.keys(presignedData.fields).forEach((key) => {
+              uploadFormData.append(key, presignedData.fields[key]);
             });
-            
-            throw new Error(`Audio upload failed (${uploadResponse.status}): ${errorMessage}`);
           }
 
-          console.log("✅ Audio uploaded successfully to S3!");
-          console.log("========================================");
-          
-          toast.success("Track and audio file uploaded successfully!");
+          // Add the file last
+          uploadFormData.append("file", audioFile, audioFile.name);
+
+          console.log("Uploading file to pre-signed URL:", uploadUrl);
+          console.log("File details:", {
+            name: audioFile.name,
+            type: audioFile.type,
+            size: audioFile.size
+          });
+
+          // Upload to the pre-signed URL (usually a different domain, so no auth needed)
+          const uploadResponse = await fetch(uploadUrl, {
+            method: "POST", // Pre-signed URLs typically use POST
+            mode: "cors",
+            // Don't set Authorization - pre-signed URLs don't need it
+            // Don't set Content-Type - browser will set it with boundary automatically
+            body: uploadFormData,
+          });
+
+          if (!uploadResponse.ok) {
+            const uploadErrorText = await uploadResponse.text();
+            console.error("Audio upload failed:", {
+              status: uploadResponse.status,
+              statusText: uploadResponse.statusText,
+              error: uploadErrorText
+            });
+            throw new Error(
+              `Audio upload failed: ${uploadResponse.status} ${uploadResponse.statusText}. ${uploadErrorText || ''}`
+            );
+          }
+
+          console.log("Audio file uploaded successfully to pre-signed URL");
+          toast.success("Track created and audio uploaded successfully! Processing will begin shortly.");
         } catch (uploadError: any) {
-          console.error("========================================");
-          console.error("❌ AUDIO UPLOAD FAILED");
-          console.error("========================================");
-          console.error("Error:", uploadError);
-          console.error("Error Message:", uploadError.message);
-          console.error("Error Stack:", uploadError.stack);
-          console.error("========================================");
+          console.error("Audio upload failed:", uploadError);
           // Track is created, but audio upload failed - show warning
-          toast.warning(`Track created but audio upload failed: ${uploadError.message || "Please upload audio manually."}`);
+          toast.warning(
+            uploadError.message || "Track created but audio upload failed. Please upload audio manually.",
+            { duration: 5000 }
+          );
         }
       } else {
-        console.warn("⚠️ Skipping audio upload - Track ID or audio file missing");
-        console.log("Track ID:", result?.id);
-        console.log("Audio File:", audioFile ? audioFile.name : "Not provided");
         toast.success("Track created successfully!");
       }
-
-      toast.success("Track created successfully!");
       
       // Redirect to tracks list
       navigate("/tracks");
     } catch (error: any) {
-      console.error("========================================");
-      console.error("❌ TRACK CREATION FAILED");
-      console.error("========================================");
-      console.error("Error:", error);
-      console.error("Error Message:", error.message);
-      console.error("Error Stack:", error.stack);
-      if (error.response) {
-        console.error("Error Response:", error.response);
-      }
-      console.error("========================================");
+      console.error("Error creating track:", error);
       toast.error(error.message || "Failed to create track");
     } finally {
       setLoading(false);
-      console.log("🏁 Form submission completed");
     }
   };
 
   return (
-    <div className="px-4 md:px-6 lg:px-8 pt-4 md:pt-6 lg:pt-8 pb-4">
+    <div className="px-4 md:px-6 lg:px-8 pt-4 md:pt-6 lg:pt-8 ">
       <div className="mb-6 flex items-center gap-4">
         <Link to="/tracks">
           <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white">
@@ -500,7 +479,7 @@ export default function NewTrackPage() {
         {/* 1. Upload Audio File */}
         <Card className="bg-gray-900/30 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">Upload Audio File</CardTitle>
+            <CardTitle className="text-white mt-4">Upload Audio File</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -572,7 +551,7 @@ export default function NewTrackPage() {
         </Card>
 
         {/* 2. ISRC Section */}
-        <Card className="bg-gray-900/30 border-gray-800">
+        <Card className="bg-gray-900/30 border-gray-800 py-4">
           <CardHeader>
             <CardTitle className="text-white">ISRC</CardTitle>
           </CardHeader>
@@ -641,7 +620,7 @@ export default function NewTrackPage() {
         </Card>
 
         {/* 3. Track Title */}
-        <Card className="bg-gray-900/30 border-gray-800">
+        <Card className="bg-gray-900/30 border-gray-800 py-4">
           <CardHeader>
             <CardTitle className="text-white">Track Information</CardTitle>
           </CardHeader>
@@ -660,18 +639,18 @@ export default function NewTrackPage() {
         </Card>
 
         {/* 4. Contributors Section */}
-        <Card className="bg-gray-900/30 border-gray-800">
+        <Card className="bg-gray-900/30 border-gray-800 py-4">
           <CardHeader>
             <CardTitle className="text-white">Contributors</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Main Primary Artist */}
             <div>
-              <Label className="text-gray-300">Main Primary Artist</Label>
+              <Label className="text-gray-300">Main Primary Artist *</Label>
               <div className="mt-2 flex gap-2">
                 <Select value={mainPrimaryArtist} onValueChange={setMainPrimaryArtist}>
                   <SelectTrigger className="flex-1 bg-gray-900 border-gray-800 text-white">
-                    <SelectValue placeholder="Select artist (optional)" />
+                    <SelectValue placeholder="Select artist" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
                     {artists.map((artist) => (
@@ -861,7 +840,7 @@ export default function NewTrackPage() {
         </Card>
 
         {/* Submit Button */}
-        <div className="flex gap-4 pt-6">
+        <div className="flex gap-4 pt-6 mb-6">
           <ButtonPrimary type="submit" disabled={loading} className="flex items-center gap-2">
             {loading ? "Creating..." : "Create Track"}
           </ButtonPrimary>

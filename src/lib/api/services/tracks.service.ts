@@ -26,54 +26,9 @@ interface CreateTrackRequest {
 
 /** Normalize API response */
 function normalizeTrack(item: any): Track {
-  // Log the raw item to see what fields are actually available
-  if (typeof window !== 'undefined') {
-    const trackId = String(item.id);
-    if (!(window as any).__trackRawData) {
-      (window as any).__trackRawData = {};
-    }
-    if (!(window as any).__trackRawData[trackId]) {
-      console.log(`🔍 Raw API response for track ${trackId}:`, {
-        id: item.id,
-        title: item.title,
-        allKeys: Object.keys(item),
-        fullItem: JSON.stringify(item, null, 2).substring(0, 1000), // First 1000 chars
-      });
-      (window as any).__trackRawData[trackId] = true;
-    }
-  }
-
-  // Try multiple possible fields for audio URL (similar to other components)
-  // Check in order of likelihood - including nested structures
-  const audioUrl =
-    item.publicFile ||
-    item.public_file ||
-    item.publicFileUrl ||
-    item.public_file_url ||
-    item.audioVersions?.find((v: any) => v.publicFile)?.publicFile ||
-    item.audioVersions?.find((v: any) => v.public_file)?.public_file ||
-    item.audioVersions?.find((v: any) => v.publicFileUrl)?.publicFileUrl ||
-    item.audioVersions?.[0]?.publicFile ||
-    item.audioVersions?.[0]?.public_file ||
-    item.audioVersions?.[0]?.publicFileUrl ||
-    item.audio_versions?.[0]?.publicFile ||
-    item.audio_versions?.[0]?.public_file ||
-    item.audio_versions?.[0]?.publicFileUrl ||
-    item.files?.find((f: any) => f.type === 'audio' || f.fileType === 'audio')?.url ||
-    item.files?.find((f: any) => f.type === 'audio' || f.fileType === 'audio')?.publicFile ||
-    item.file ||
-    item.audio_url ||
-    item.audioUrl ||
-    item.audioFile ||
-    item.url ||
-    item.downloadUrl ||
-    item.streamUrl ||
-    "";
-
-  if (!audioUrl && typeof window !== 'undefined') {
-    console.warn(`⚠️ No audio URL found for track ${item.id}. Available fields:`, Object.keys(item));
-  }
-
+  // Check all possible audio URL fields from API response
+  const audioUrl = item.audio_url || item.audioUrl || item.publicFile || "";
+  
   return {
     id: String(item.id),
     title: item.title || "Untitled",
@@ -157,7 +112,21 @@ export const tracksService = {
 
     try {
       const token = getBasicToken();
-      const url = `${API_CONFIG.BASE_URL}/tracks`;
+      
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      queryParams.append("include_files", "true");
+      if (params?.page) {
+        queryParams.append("page", String(params.page));
+      }
+      if (params?.limit) {
+        queryParams.append("limit", String(params.limit));
+      }
+      if (params?.search) {
+        queryParams.append("search", params.search);
+      }
+      
+      const url = `${API_CONFIG.BASE_URL}/tracks/?${queryParams.toString()}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -196,95 +165,6 @@ export const tracksService = {
   },
 
   /** ------------------------------------------------------
-   * GET TRACKS FOR RELEASE
-   * ------------------------------------------------------*/
-  async getTracksForRelease(releaseId: string): Promise<Track[]> {
-    if (isDemoMode()) {
-      await simulateDelay();
-      // Filter demo tracks by releaseId if available
-      const allTracks = [...demoTracks, ...demoStorage.getAll<Track>("tracks")];
-      return allTracks.filter((t: any) => t.releaseId === releaseId);
-    }
-
-    try {
-      const token = getBasicToken();
-      // Query tracks with release_id parameter
-      const url = `${API_CONFIG.BASE_URL}/tracks?release_id=${releaseId}`;
-
-      const response = await fetch(url, {
-        method: "GET",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        // If 404 or no tracks found, return empty array instead of throwing
-        if (response.status === 404) {
-          return [];
-        }
-        throw new Error(`Failed to fetch tracks for release: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Handle different response formats
-      if (Array.isArray(data)) {
-        return data.map(normalizeTrack);
-      } else if (Array.isArray(data.results)) {
-        return data.results.map(normalizeTrack);
-      } else if (Array.isArray(data.data)) {
-        return data.data.map(normalizeTrack);
-      }
-
-      return [];
-    } catch (err) {
-      logger.error(`Get tracks for release ${releaseId} failed:`, err);
-      // Return empty array on error instead of throwing
-      return [];
-    }
-  },
-
-  /** ------------------------------------------------------
-   * GET TRACK AUDIO FILE URL
-   * Try to get audio URL from download endpoint
-   * ------------------------------------------------------*/
-  async getTrackAudioUrl(trackId: string): Promise<string | null> {
-    if (isDemoMode()) {
-      return null;
-    }
-
-    try {
-      const token = getBasicToken();
-      // Try the download endpoint to get audio file URL
-      const url = `${API_CONFIG.BASE_URL}/tracks/${trackId}/download/`;
-
-      const response = await fetch(url, {
-        method: "GET",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // The response might contain a URL or redirect
-        return data.url || data.publicFile || data.public_file || null;
-      }
-      
-      // If download endpoint doesn't work, return null
-      return null;
-    } catch (err) {
-      logger.error(`Get track audio URL for ${trackId} failed:`, err);
-      return null;
-    }
-  },
-
-  /** ------------------------------------------------------
    * GET TRACK BY ID
    * ------------------------------------------------------*/
   async getById(trackId: string): Promise<Track> {
@@ -317,35 +197,8 @@ export const tracksService = {
       }
 
       const data = await response.json();
-      
-      // Debug: Log raw API response structure for track details
-      if (typeof window !== 'undefined') {
-        console.log("🔍 GET /tracks/:id raw response:", {
-          id: data.id,
-          title: data.title,
-          keys: Object.keys(data),
-          hasPublicFile: !!data.publicFile,
-          hasPublic_file: !!data.public_file,
-          hasAudioVersions: !!data.audioVersions,
-          hasAudio_versions: !!data.audio_versions,
-          audioVersionsCount: data.audioVersions?.length || data.audio_versions?.length || 0,
-          fullResponse: JSON.stringify(data, null, 2).substring(0, 2000), // First 2000 chars
-        });
-      }
    
-      const normalizedTrack = normalizeTrack(data);
-      
-      // If audioUrl is still empty, try to get it from download endpoint
-      if (!normalizedTrack.audioUrl) {
-        console.log("🔍 Track has no audioUrl, trying download endpoint...");
-        const audioUrl = await this.getTrackAudioUrl(trackId);
-        if (audioUrl) {
-          normalizedTrack.audioUrl = audioUrl;
-          console.log("✅ Found audio URL from download endpoint:", audioUrl);
-        }
-      }
-   
-      return normalizedTrack;
+      return normalizeTrack(data);
     } catch (err) {
       logger.error(`Get track ${trackId} failed:`, err);
       throw err;
@@ -599,7 +452,14 @@ export const tracksService = {
       }
 
       const data = await response.json();
-      return normalizeTrack(data);
+      // For single track, check all possible audio URL fields
+      const normalized = normalizeTrack(data);
+      // Also check raw response for audio URLs that might not be in normalizeTrack
+      const audioUrl = data.audio_url || data.audioUrl || data.publicFile || normalized.audioUrl || "";
+      return {
+        ...normalized,
+        audioUrl: audioUrl,
+      };
     } catch (err) {
       logger.error(`Update track ${id} failed:`, err);
       throw err;

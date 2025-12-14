@@ -4,6 +4,7 @@
  */
 
 import { API_CONFIG, isLiveMode } from "../config";
+import { logger } from "../logger";
 import { getApiHeaders, handleApiResponse } from "./helpers";
 
 export interface ConnectionTestResult {
@@ -74,13 +75,13 @@ async function testEndpoint(
 export async function testApiConnection(): Promise<FullTestReport> {
   const mode = isLiveMode() ? "live" : "demo";
 
-  console.log(`Starting API connection test in ${mode} mode...`);
+  logger.info(`Starting API connection test in ${mode} mode...`);
 
   const results: ConnectionTestResult[] = [];
 
   // Only test in live mode
   if (mode === "demo") {
-    console.log("Skipping connection test - running in demo mode");
+    logger.info("Skipping connection test - running in demo mode");
 
     return {
       mode,
@@ -111,7 +112,7 @@ export async function testApiConnection(): Promise<FullTestReport> {
   ];
 
   for (const endpoint of endpoints) {
-    console.log(`Testing ${endpoint.method} ${endpoint.path}...`);
+    logger.info(`Testing ${endpoint.method} ${endpoint.path}...`);
     const result = await testEndpoint(
       endpoint.path,
       endpoint.method,
@@ -137,16 +138,16 @@ export async function testApiConnection(): Promise<FullTestReport> {
   };
 
   // Log results
-  console.log("API Connection Test Results:");
-  console.log(
+  logger.info("API Connection Test Results:");
+  logger.info(
     `Total: ${summary.total} | Passed: ${summary.passed} | Failed: ${summary.failed}`
   );
 
   results.forEach((result) => {
     if (result.status === "success") {
-      console.log("✅", result.message);
+      logger.success(result.message);
     } else if (result.status === "failed") {
-      console.error("❌", result.message);
+      logger.error(result.message);
     }
   });
 
@@ -158,7 +159,7 @@ export async function testApiConnection(): Promise<FullTestReport> {
  */
 export async function quickHealthCheck(): Promise<boolean> {
   if (!isLiveMode()) {
-    console.log("Demo mode active");
+    logger.info("Demo mode active");
     return true;
   }
 
@@ -169,10 +170,10 @@ export async function quickHealthCheck(): Promise<boolean> {
     });
 
     await handleApiResponse(response);
-    console.log("✅ API health check passed");
+    logger.success("API health check passed");
     return true;
   } catch (error) {
-    console.error("❌ API health check failed", error);
+    logger.error("API health check failed", error);
     return false;
   }
 }
@@ -225,8 +226,8 @@ if (typeof window !== "undefined") {
   (window as any).quickHealthCheck = quickHealthCheck;
   (window as any).validateApiConfig = validateApiConfig;
 
-  console.log("API test utilities loaded. Try:");
-  console.log("- testApiConnection() - Full connection test");
-  console.log("- quickHealthCheck() - Quick health check");
-  console.log("- validateApiConfig() - Validate configuration");
+  logger.info("API test utilities loaded. Try:");
+  logger.info("- testApiConnection() - Full connection test");
+  logger.info("- quickHealthCheck() - Quick health check");
+  logger.info("- validateApiConfig() - Validate configuration");
 }

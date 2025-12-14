@@ -282,14 +282,62 @@ console.log(release)
           full
         />
 
-        {/* Artist */}
+        {/* Contributors Section */}
         <div className="bg-[#0e0e0e] border border-gray-800 rounded-xl p-5">
-          <p className="text-sm text-gray-400 mb-2">Artists</p>
-          <div className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-lg border border-gray-800">
-            <div className="h-4 w-4 rounded-full bg-green-400" />
-            <span className="text-gray-200">{artistName}</span>
-            <span className="text-gray-400 text-sm">Main Primary Artist</span>
-          </div>
+          <p className="text-sm text-gray-400 mb-4">Contributors</p>
+          
+          {/* Primary Contributions */}
+          {release?.primary_contributions && release.primary_contributions.length > 0 && (
+            <div className="space-y-2 mb-4">
+              <p className="text-xs text-gray-500 mb-2">Primary Contributions</p>
+              {release.primary_contributions.map((contrib: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-lg border border-gray-800"
+                >
+                  <div className="h-4 w-4 rounded-full bg-green-400" />
+                  <span className="text-gray-200">
+                    {contrib.artist?.name || contrib.artist || "Unknown"}
+                  </span>
+                  {contrib.featured && (
+                    <span className="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded">
+                      Featured
+                    </span>
+                  )}
+                  <span className="text-gray-400 text-sm ml-auto">Primary</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Contributions */}
+          {release?.contributions && release.contributions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 mb-2">Additional Contributions</p>
+              {release.contributions.map((contrib: any, index: number) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-lg border border-gray-800"
+                >
+                  <div className="h-4 w-4 rounded-full bg-blue-400" />
+                  <span className="text-gray-200">
+                    {contrib.artist?.name || contrib.artist || "Unknown"}
+                  </span>
+                  <span className="text-gray-400 text-sm ml-auto">Contributor</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fallback to artist_display_name if no contributors */}
+          {(!release?.primary_contributions || release.primary_contributions.length === 0) &&
+            (!release?.contributions || release.contributions.length === 0) && (
+              <div className="flex items-center gap-3 bg-[#111] px-4 py-3 rounded-lg border border-gray-800">
+                <div className="h-4 w-4 rounded-full bg-green-400" />
+                <span className="text-gray-200">{artistName}</span>
+                <span className="text-gray-400 text-sm ml-auto">Main Primary Artist</span>
+              </div>
+            )}
         </div>
 
         {/* Genres */}

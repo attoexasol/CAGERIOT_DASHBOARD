@@ -1,387 +1,15 @@
-// "use client";
-
-// import { ArrowLeft } from "lucide-react";
-// import { useState } from "react";
-// import { toast } from "sonner@2.0.3";
-// import { ButtonPrimary } from "../../../../components/ButtonPrimary";
-// import { Button } from "../../../../components/ui/button";
-// import { Input } from "../../../../components/ui/input";
-// import { Label } from "../../../../components/ui/label";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "../../../../components/ui/select";
-// import { Textarea } from "../../../../components/ui/textarea";
-// import { releasesService } from "../../../../lib/api";
-// import { logger } from "../../../../lib/logger";
-
-// // Router handling for Next.js or React Router
-// const isNextJs =
-//   typeof window === "undefined" || !!(window as any).__NEXT_DATA__;
-// let Link: any;
-// let useRouter: any;
-// let useNavigate: any;
-
-// if (isNextJs) {
-//   try {
-//     const nextRouter = require("next/navigation");
-//     const nextLink = require("next/link");
-//     Link = nextLink.default;
-//     useRouter = nextRouter.useRouter;
-//   } catch {}
-// }
-
-// if (!Link) {
-//   try {
-//     const reactRouter = require("react-router-dom");
-//     Link = reactRouter.Link;
-//     useNavigate = reactRouter.useNavigate;
-//   } catch {
-//     Link = ({ to, href, children, ...props }: any) => (
-//       <a href={to || href} {...props}>
-//         {children}
-//       </a>
-//     );
-//   }
-// }
-
-// export default function NewRelease() {
-//   const router = useRouter ? useRouter() : null;
-//   const navigate = useNavigate ? useNavigate() : null;
-
-//   const [loading, setLoading] = useState(false);
-//   const [formData, setFormData] = useState({
-//     title: "",
-//     catNo: "",
-//     barcode: "",
-//     primaryArtists: "",
-//     featuringArtists: "",
-//     territories: "",
-//     artistDisplayName: "",
-//     primaryGenre: "",
-//     cLine: "",
-//     cYear: new Date().getFullYear(),
-//     pLine: "",
-//     pYear: new Date().getFullYear(),
-//     label: "",
-//     format: "Single",
-//     releaseDate: "",
-//     originalReleaseDate: "",
-//     packshot: "",
-//   });
-
-//   // Convert date to ISO YYYY-MM-DD
-//   const formatDate = (dateStr: string) => {
-//     if (!dateStr) return undefined;
-//     const d = new Date(dateStr);
-//     if (isNaN(d.getTime())) return undefined;
-//     return d.toISOString().split("T")[0];
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setLoading(true);
-
-//     try {
-//       // Prepare payload
-//       const payload = {
-//         title: formData.title,
-//         catNo: formData.catNo || undefined,
-//         barcode: formData.barcode || undefined,
-//         primaryArtists: formData.primaryArtists
-//           ? formData.primaryArtists.split(",").map((s) => s.trim())
-//           : [],
-//         featuringArtists: formData.featuringArtists
-//           ? formData.featuringArtists.split(",").map((s) => s.trim())
-//           : [],
-//         territories: formData.territories
-//           ? formData.territories.split(",").map((s) => s.trim().toUpperCase())
-//           : [],
-//         artistDisplayName: formData.artistDisplayName || undefined,
-//         primaryGenre: formData.primaryGenre || undefined,
-//         cLine: formData.cLine || undefined,
-//         cYear: Number(formData.cYear) || new Date().getFullYear(),
-//         pLine: formData.pLine || undefined,
-//         pYear: Number(formData.pYear) || new Date().getFullYear(),
-//         label: formData.label || undefined,
-//         format: formData.format || "Single",
-//         releaseDate: formatDate(formData.releaseDate),
-//         originalReleaseDate: formatDate(formData.originalReleaseDate),
-//         packshot: formData.packshot || undefined,
-//       };
-
-//       console.log("Payload sent to API:", payload);
-
-//       const data = await releasesService.create(payload);
-//       logger.log("Release created:", data);
-//       toast.success("Release created successfully!");
-
-//       if (router) router.push("/releases");
-//       else if (navigate) navigate("/releases");
-//       else window.location.href = "/releases";
-//     } catch (error: any) {
-//       logger.error("Create release failed:", error.message || error);
-//       toast.error(error.message || "Failed to create release");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="p-4 md:p-8">
-//       {/* Header */}
-//       <div className="mb-6 flex items-center gap-3 ">
-//         <Link to="/releases" href="/releases">
-//           <Button variant="ghost" size="icon" className="text-gray-400">
-//             <ArrowLeft className="h-5 w-5 " />
-//           </Button>
-//         </Link>
-//         <div>
-//           <h1 className="text-2xl md:text-3xl text-white font-semibold">
-//             Create New Release
-//           </h1>
-//           <p className="text-gray-400 text-sm md:text-base">
-//             Add a new release to your catalog
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* Form */}
-//       <div className="max-w-3xl mx-auto">
-//         <form onSubmit={handleSubmit} className="space-y-6">
-//           <div className="rounded-xl border border-gray-800 bg-gray-900/30 p-6">
-//             <h2 className="mb-6 text-xl text-white">Release Information</h2>
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//               <InputField
-//                 label="Title *"
-//                 name="title"
-//                 value={formData.title}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Catalog No"
-//                 name="catNo"
-//                 value={formData.catNo}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Barcode"
-//                 name="barcode"
-//                 value={formData.barcode}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Artist Display Name"
-//                 name="artistDisplayName"
-//                 value={formData.artistDisplayName}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Primary Artists (comma separated)"
-//                 name="primaryArtists"
-//                 value={formData.primaryArtists}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Featuring Artists (comma separated)"
-//                 name="featuringArtists"
-//                 value={formData.featuringArtists}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Territories (comma separated)"
-//                 name="territories"
-//                 value={formData.territories}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Primary Genre"
-//                 name="primaryGenre"
-//                 value={formData.primaryGenre}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Label"
-//                 name="label"
-//                 value={formData.label}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-
-//               {/* Format */}
-//               <div>
-//                 <Label className="text-gray-300">Format *</Label>
-//                 <Select
-//                   value={formData.format}
-//                   onValueChange={(value: any) =>
-//                     setFormData({ ...formData, format: value })
-//                   }
-//                   disabled={loading}
-//                 >
-//                   <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
-//                     <SelectValue />
-//                   </SelectTrigger>
-//                   <SelectContent className="bg-gray-800 border-gray-700">
-//                     <SelectItem value="Single">Single</SelectItem>
-//                     <SelectItem value="Album">Album</SelectItem>
-//                     <SelectItem value="EP">EP</SelectItem>
-//                   </SelectContent>
-//                 </Select>
-//               </div>
-
-//               <InputField
-//                 label="Release Date *"
-//                 name="releaseDate"
-//                 type="date"
-//                 value={formData.releaseDate}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="Original Release Date"
-//                 name="originalReleaseDate"
-//                 type="date"
-//                 value={formData.originalReleaseDate}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-
-//               <InputField
-//                 label="© Line"
-//                 name="cLine"
-//                 value={formData.cLine}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="© Year"
-//                 name="cYear"
-//                 type="number"
-//                 value={formData.cYear}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="℗ Line"
-//                 name="pLine"
-//                 value={formData.pLine}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-//               <InputField
-//                 label="℗ Year"
-//                 name="pYear"
-//                 type="number"
-//                 value={formData.pYear}
-//                 setFormData={setFormData}
-//                 loading={loading}
-//               />
-
-//               <div className="md:col-span-2">
-//                 <Label className="text-gray-300">Packshot (Base64)</Label>
-//                 <Textarea
-//                   value={formData.packshot}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, packshot: e.target.value })
-//                   }
-//                   placeholder="Paste Base64 encoded image string"
-//                   disabled={loading}
-//                   className="mt-2 bg-gray-900 border-gray-800 text-white resize-none"
-//                   style={{
-//                     height: "5rem",
-//                     minHeight: "5rem",
-//                     maxHeight: "5rem",
-//                     overflow: "hidden",
-//                   }}
-//                 />
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* Buttons */}
-//           <div className="flex flex-col sm:flex-row gap-3">
-//             <ButtonPrimary
-//               type="submit"
-//               className="flex-1 justify-center"
-//               disabled={loading}
-//             >
-//               {loading ? "Creating..." : "Create Release"}
-//             </ButtonPrimary>
-//             <Link to="/releases" href="/releases" className="flex-1">
-//               <Button
-//                 type="button"
-//                 variant="outline"
-//                 className="w-full border-gray-700 bg-transparent text-white hover:bg-gray-800"
-//                 disabled={loading}
-//               >
-//                 Cancel
-//               </Button>
-//             </Link>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // Reusable input field component
-// function InputField({
-//   label,
-//   name,
-//   type = "text",
-//   value,
-//   setFormData,
-//   loading,
-// }: {
-//   label: string;
-//   name: string;
-//   type?: string;
-//   value: any;
-//   setFormData: any;
-//   loading: boolean;
-// }) {
-//   return (
-//     <div className="w-full">
-//       <Label htmlFor={name} className="text-gray-300">
-//         {label}
-//       </Label>
-//       <Input
-//         id={name}
-//         type={type}
-//         value={value}
-//         onChange={(e) =>
-//           setFormData((prev: any) => ({ ...prev, [name]: e.target.value }))
-//         }
-//         className="mt-2 bg-gray-900 border-gray-800 text-white"
-//         disabled={loading}
-//       />
-//     </div>
-//   );
-// }
-
-
-
-
 "use client";
 
-import { ArrowLeft, Upload } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner@2.0.3";
-import { ButtonPrimary } from "../../../../components/ButtonPrimary";
-import { Button } from "../../../../components/ui/button";
+import React, { useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
+import { Button } from "../../../../components/ui/button";
+import { ButtonPrimary } from "../../../../components/ButtonPrimary";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 import {
   Select,
   SelectContent,
@@ -389,122 +17,171 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../../components/ui/select";
+
 import { releasesService } from "../../../../lib/api";
+import { artistsService } from "../../../../lib/api/services/artists.service";
+import { Plus, X } from "lucide-react";
+import { Checkbox } from "../../../../components/ui/checkbox";
+import { useEffect } from "react";
 
-const isNextJs =
-  typeof window === "undefined" || !!(window as any).__NEXT_DATA__;
-let Link: any;
-let useRouter: any;
-let useNavigate: any;
-
-if (isNextJs) {
-  try {
-    const nextRouter = require("next/navigation");
-    const nextLink = require("next/link");
-    Link = nextLink.default;
-    useRouter = nextRouter.useRouter;
-  } catch {}
-}
-
-if (!Link) {
-  try {
-    const reactRouter = require("react-router-dom");
-    Link = reactRouter.Link;
-    useNavigate = reactRouter.useNavigate;
-  } catch {
-    Link = ({ to, href, children, ...props }: any) => (
-      <a href={to || href} {...props}>
-        {children}
-      </a>
-    );
-  }
+// Input Field Component
+function InputField({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  required,
+  error,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  value: any;
+  onChange: (value: any) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  error?: string;
+}) {
+  return (
+    <div className="w-full">
+      <Label htmlFor={name} className="text-gray-300">
+        {label} {required && <span className="text-red-400">*</span>}
+      </Label>
+      <Input
+        id={name}
+        type={type}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`mt-2 bg-gray-900 border-gray-800 text-white ${
+          error ? "border-red-500 ring-2 ring-red-500" : ""
+        }`}
+      />
+      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+    </div>
+  );
 }
 
 export default function NewRelease() {
-  const router = useRouter ? useRouter() : null;
-  const navigate = useNavigate ? useNavigate() : null;
-
-  const initialState = {
-    title: "",
-    catNo: "",
-    barcode: "",
-    primaryArtists: [] as string[],
-    featuringArtists: [] as string[],
-    territories: [] as string[],
-    artistDisplayName: "",
-    primaryGenre: "",
-    cLine: "",
-    cYear: new Date().getFullYear(),
-    pLine: "",
-    pYear: new Date().getFullYear(),
-    label: "",
-    format: "Single",
-    releaseDate: "",
-    originalReleaseDate: "",
-    packshot: "",
-  };
-
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(initialState);
-  const [packshotName, setPackshotName] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [artists, setArtists] = useState<any[]>([]);
 
-  // handle image upload
-  const handlePackshotUpload = (file: File) => {
-    const reader = new FileReader();
-    const img = new Image();
+  // Minimal form data - only essential fields
+  const [formData, setFormData] = useState({
+    title: "",
+    release_date: "",
+    artist_display_name: "",
+    label: "",
+    metadata_language: "",
+    configuration: "",
+  });
 
-    reader.onload = (e) => {
-      if (!e.target?.result) return;
-      img.src = e.target.result as string;
+  // Contributors
+  const [primaryContributions, setPrimaryContributions] = useState([
+    { artist: "", featured: false },
+  ]);
+  const [contributions, setContributions] = useState([{ artist: "" }]);
 
-      img.onload = () => {
-        if (img.width !== img.height) {
-          toast.error("Packshot must be square!");
-          return;
-        }
-        setFormData((prev) => ({
-          ...prev,
-          packshot: e.target?.result as string,
-        }));
-        setPackshotName(file.name);
-        toast.success("Packshot uploaded!");
-      };
-    };
+  // Load artists on mount
+  useEffect(() => {
+    loadArtists();
+  }, []);
 
-    reader.readAsDataURL(file);
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return undefined;
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return undefined;
-    return d.toISOString().split("T")[0];
+  const loadArtists = async () => {
+    try {
+      const response = await artistsService.getAll();
+      setArtists(response.data || []);
+    } catch (error) {
+      console.error("Failed to load artists:", error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    const newErrors: Record<string, string> = {};
+    const missingFields: string[] = [];
+    
+    if (!formData.title || formData.title.trim() === "") {
+      newErrors.title = "Title is required";
+      missingFields.push("Title");
+    }
+    if (!formData.metadata_language || formData.metadata_language.trim() === "") {
+      newErrors.metadata_language = "Metadata language is required";
+      missingFields.push("Metadata Language");
+    }
+    if (!formData.configuration || formData.configuration.trim() === "") {
+      newErrors.configuration = "Configuration is required";
+      missingFields.push("Configuration");
+    }
+    if (!formData.label || formData.label.trim() === "") {
+      newErrors.label = "Label is required";
+      missingFields.push("Label");
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      
+      // Scroll to first error field
+      const firstErrorField = Object.keys(newErrors)[0];
+      const errorElement = document.getElementById(firstErrorField);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          errorElement.focus();
+        }, 300);
+      }
+      
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+    
+    setErrors({});
     setLoading(true);
 
     try {
-      const payload = {
-        title: formData.title,
-        catNo: formData.catNo || undefined,
-        barcode: formData.barcode || undefined,
-        primaryArtists: formData.primaryArtists.map((s) => s.trim()),
-        featuringArtists: formData.featuringArtists.map((s) => s.trim()),
-        territories: formData.territories.map((s) => s.trim().toUpperCase()),
-        artistDisplayName: formData.artistDisplayName || undefined,
-        primaryGenre: formData.primaryGenre || undefined,
-        cLine: formData.cLine || undefined,
-        cYear: Number(formData.cYear),
-        pLine: formData.pLine || undefined,
-        pYear: Number(formData.pYear),
-        label: formData.label || undefined,
-        format: formData.format || "Single",
-        releaseDate: formatDate(formData.releaseDate),
-        originalReleaseDate: formatDate(formData.originalReleaseDate),
-        packshot: formData.packshot || undefined,
+      // Build minimal payload - only send what's needed
+      const payload: any = {
+        title: formData.title.trim(),
+        label: formData.label.trim(),
+        metadata_language: formData.metadata_language,
+        configuration: formData.configuration,
       };
+
+      // Add optional fields only if they have values
+      if (formData.release_date) {
+        payload.release_date = formData.release_date;
+      }
+      if (formData.artist_display_name && formData.artist_display_name.trim()) {
+        payload.artist_display_name = formData.artist_display_name.trim();
+      }
+
+      // Add primary contributions if any are filled
+      if (primaryContributions.length > 0 && primaryContributions[0].artist) {
+        payload.primary_contributions = primaryContributions
+          .filter((c) => c.artist)
+          .map((c) => ({
+            artist: c.artist,
+            featured: c.featured,
+          }));
+      }
+
+      // Add contributions if any are filled
+      if (contributions.length > 0 && contributions[0].artist) {
+        payload.contributions = contributions
+          .filter((c) => c.artist)
+          .map((c) => ({
+            artist: c.artist,
+          }));
+      }
 
       console.log("Payload sent to API:", payload);
 
@@ -512,12 +189,16 @@ export default function NewRelease() {
       console.log("✅ Release created:", data);
       toast.success("Release created successfully!");
 
-      // ✅ Reset form after success
-      setFormData(initialState);
-      setPackshotName("");
+      navigate("/releases");
     } catch (error: any) {
       console.error("❌ Create release failed:", error.message || error);
-      toast.error(error.message || "Failed to create release");
+      const errorMessage = error.message || "Failed to create release";
+      toast.error(errorMessage);
+      
+      // Show more detailed error if available
+      if (error.response?.data?.details) {
+        console.error("API Error Details:", error.response.data.details);
+      }
     } finally {
       setLoading(false);
     }
@@ -527,7 +208,7 @@ export default function NewRelease() {
     <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <Link to="/releases" href="/releases">
+        <Link to="/releases">
           <Button variant="ghost" size="icon" className="text-gray-400">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -543,233 +224,306 @@ export default function NewRelease() {
       </div>
 
       {/* Form */}
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="rounded-xl border border-gray-800 bg-gray-900/30 p-6">
-            <h2 className="mb-6 text-xl text-white">Release Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Title *"
-                name="title"
-                value={formData.title}
-                onChange={(v) => setFormData({ ...formData, title: v })}
-                loading={loading}
-              />
-              <InputField
-                label="Catalog No"
-                name="catNo"
-                value={formData.catNo}
-                onChange={(v) => setFormData({ ...formData, catNo: v })}
-                loading={loading}
-              />
-              <InputField
-                label="Barcode"
-                name="barcode"
-                value={formData.barcode}
-                onChange={(v) => setFormData({ ...formData, barcode: v })}
-                loading={loading}
-              />
-              <InputField
-                label="Artist Display Name"
-                name="artistDisplayName"
-                value={formData.artistDisplayName}
-                onChange={(v) =>
-                  setFormData({ ...formData, artistDisplayName: v })
-                }
-                loading={loading}
-              />
-              <InputField
-                label="Label"
-                name="label"
-                value={formData.label}
-                onChange={(v) => setFormData({ ...formData, label: v })}
-                loading={loading}
-              />
-
-              <ArrayInputField
-                label="Primary Artists"
-                values={formData.primaryArtists}
-                onChange={(arr) =>
-                  setFormData({ ...formData, primaryArtists: arr })
-                }
-                loading={loading}
-              />
-              <ArrayInputField
-                label="Featuring Artists"
-                values={formData.featuringArtists}
-                onChange={(arr) =>
-                  setFormData({ ...formData, featuringArtists: arr })
-                }
-                loading={loading}
-              />
-
-              {/* Territories */}
-              <div className="md:col-span-2">
-                <Label className="text-gray-300">Territories</Label>
-                <Select
-                  value=""
-                  onValueChange={(value: string) =>
-                    setFormData((prev) => {
-                      const alreadySelected = prev.territories.includes(value);
-                      const updated = alreadySelected
-                        ? prev.territories.filter((t) => t !== value)
-                        : [...prev.territories, value];
-                      return { ...prev, territories: updated };
-                    })
-                  }
+          <Card className="border-gray-800 bg-gray-900/30 ">
+            <CardHeader>
+              <CardTitle className="text-white text-xl mt-2">Release Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Title - Required */}
+                <InputField
+                  label="Title"
+                  name="title"
+                  value={formData.title}
+                  onChange={(v) => {
+                    setFormData({ ...formData, title: v });
+                    if (errors.title) {
+                      setErrors({ ...errors, title: "" });
+                    }
+                  }}
                   disabled={loading}
-                >
-                  <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
-                    <SelectValue
-                      placeholder={
-                        formData.territories.length > 0
-                          ? formData.territories.join(", ")
-                          : "Select territories"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    {["US", "GB", "AU", "CA", "FR", "DE"].map((code) => (
-                      <SelectItem key={code} value={code}>
-                        <div className="flex justify-between w-full">
-                          <span>{code}</span>
-                          {formData.territories.includes(code) && (
-                            <span className="text-green-400 ml-2">✔</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Genre & Format */}
-              <div>
-                <Label className="text-gray-300">Primary Genre *</Label>
-                <Select
-                  value={formData.primaryGenre}
-                  onValueChange={(value: string) =>
-                    setFormData({ ...formData, primaryGenre: value })
-                  }
-                  disabled={loading}
-                >
-                  <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 max-h-48 overflow-y-auto scroll-smooth rounded-md shadow-lg">
-                    <SelectItem value="Electronic">Electronic</SelectItem>
-                    <SelectItem value="Folk">Folk</SelectItem>
-                    <SelectItem value="Hip Hop/Rap">Hip Hop/Rap</SelectItem>
-                    <SelectItem value="Holiday">Holiday</SelectItem>
-                    <SelectItem value="Inspirational">Inspirational</SelectItem>
-                    <SelectItem value="Jazz">Jazz</SelectItem>
-                    <SelectItem value="Latin">Latin</SelectItem>
-                    <SelectItem value="New Age">New Age</SelectItem>
-                    <SelectItem value="Opera">Opera</SelectItem>
-                    <SelectItem value="Pop">Pop</SelectItem>
-                    <SelectItem value="R&B/Soul">R&B/Soul</SelectItem>
-                    <SelectItem value="Reggae">Reggae</SelectItem>
-                    <SelectItem value="Rock">Rock</SelectItem>
-                    <SelectItem value="Spoken Word">Spoken Word</SelectItem>
-                    <SelectItem value="Soundtrack">Soundtrack</SelectItem>
-                    <SelectItem value="Vocal">Vocal</SelectItem>
-                    <SelectItem value="World">World</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-gray-300">Format *</Label>
-                <Select
-                  value={formData.format}
-                  onValueChange={(value: string) =>
-                    setFormData({ ...formData, format: value })
-                  }
-                  disabled={loading}
-                >
-                  <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="Single">Single</SelectItem>
-                    <SelectItem value="Album">Album</SelectItem>
-                    <SelectItem value="EP">EP</SelectItem>
-                    <SelectItem value="EP">Compilation</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Dates */}
-              <InputField
-                label="Release Date *"
-                name="releaseDate"
-                type="date"
-                value={formData.releaseDate}
-                onChange={(v) => setFormData({ ...formData, releaseDate: v })}
-                loading={loading}
-              />
-              <InputField
-                label="Original Release Date"
-                name="originalReleaseDate"
-                type="date"
-                value={formData.originalReleaseDate}
-                onChange={(v) =>
-                  setFormData({ ...formData, originalReleaseDate: v })
-                }
-                loading={loading}
-              />
-
-              {/* C & P Lines */}
-              <InputField
-                label="© Line"
-                name="cLine"
-                value={formData.cLine}
-                onChange={(v) => setFormData({ ...formData, cLine: v })}
-                loading={loading}
-              />
-              <InputField
-                label="© Year"
-                name="cYear"
-                type="number"
-                value={formData.cYear}
-                onChange={(v) => setFormData({ ...formData, cYear: Number(v) })}
-                loading={loading}
-              />
-              <InputField
-                label="℗ Line"
-                name="pLine"
-                value={formData.pLine}
-                onChange={(v) => setFormData({ ...formData, pLine: v })}
-                loading={loading}
-              />
-              <InputField
-                label="℗ Year"
-                name="pYear"
-                type="number"
-                value={formData.pYear}
-                onChange={(v) => setFormData({ ...formData, pYear: Number(v) })}
-                loading={loading}
-              />
-
-              {/* Packshot */}
-              <div className="md:col-span-2">
-                <Label className="text-gray-300 flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-gray-400" /> Packshot (Square)
-                </Label>
-
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) =>
-                    e.target.files?.[0] &&
-                    handlePackshotUpload(e.target.files[0])
-                  }
-                  disabled={loading}
-                  className="mt-2 bg-gray-900 border-gray-800 text-white"
+                  required
+                  error={errors.title}
+                  placeholder="Enter release title"
                 />
+
+                {/* Release Date - Optional */}
+                <InputField
+                  label="Release Date"
+                  name="release_date"
+                  type="date"
+                  value={formData.release_date}
+                  onChange={(v) => setFormData({ ...formData, release_date: v })}
+                  disabled={loading}
+                  placeholder="Select release date"
+                />
+
+                {/* Artist Display Name - Optional */}
+                <InputField
+                  label="Artist Display Name"
+                  name="artist_display_name"
+                  value={formData.artist_display_name}
+                  onChange={(v) => setFormData({ ...formData, artist_display_name: v })}
+                  disabled={loading}
+                  placeholder="Enter artist name"
+                />
+
+                {/* Label - Required */}
+                <InputField
+                  label="Label"
+                  name="label"
+                  value={formData.label}
+                  onChange={(v) => {
+                    setFormData({ ...formData, label: v });
+                    if (errors.label) {
+                      setErrors({ ...errors, label: "" });
+                    }
+                  }}
+                  disabled={loading}
+                  required
+                  error={errors.label}
+                  placeholder="Enter label name"
+                />
+
+                {/* Metadata Language - Required Dropdown */}
+                <div className="w-full" id="metadata_language">
+                  <Label htmlFor="metadata_language" className="text-gray-300">
+                    Metadata Language <span className="text-red-400">*</span>
+                  </Label>
+                  <Select
+                    value={formData.metadata_language}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, metadata_language: value });
+                      if (errors.metadata_language) {
+                        setErrors({ ...errors, metadata_language: "" });
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    <SelectTrigger 
+                      id="metadata_language_select"
+                      className={`mt-2 bg-gray-900 border-gray-800 text-white ${
+                        errors.metadata_language ? "border-red-500 ring-2 ring-red-500" : ""
+                      }`}
+                    >
+                      <SelectValue placeholder="Select metadata language" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                      <SelectItem value="English" className="text-white">English</SelectItem>
+                      <SelectItem value="Spanish" className="text-white">Spanish</SelectItem>
+                      <SelectItem value="French" className="text-white">French</SelectItem>
+                      <SelectItem value="German" className="text-white">German</SelectItem>
+                      <SelectItem value="Italian" className="text-white">Italian</SelectItem>
+                      <SelectItem value="Portuguese" className="text-white">Portuguese</SelectItem>
+                      <SelectItem value="Japanese" className="text-white">Japanese</SelectItem>
+                      <SelectItem value="Chinese" className="text-white">Chinese</SelectItem>
+                      <SelectItem value="Korean" className="text-white">Korean</SelectItem>
+                      <SelectItem value="Russian" className="text-white">Russian</SelectItem>
+                      <SelectItem value="Arabic" className="text-white">Arabic</SelectItem>
+                      <SelectItem value="Hindi" className="text-white">Hindi</SelectItem>
+                      <SelectItem value="Dutch" className="text-white">Dutch</SelectItem>
+                      <SelectItem value="Swedish" className="text-white">Swedish</SelectItem>
+                      <SelectItem value="Norwegian" className="text-white">Norwegian</SelectItem>
+                      <SelectItem value="Danish" className="text-white">Danish</SelectItem>
+                      <SelectItem value="Finnish" className="text-white">Finnish</SelectItem>
+                      <SelectItem value="Polish" className="text-white">Polish</SelectItem>
+                      <SelectItem value="Turkish" className="text-white">Turkish</SelectItem>
+                      <SelectItem value="Greek" className="text-white">Greek</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.metadata_language && (
+                    <p className="text-red-400 text-sm mt-1">{errors.metadata_language}</p>
+                  )}
+                </div>
+
+                {/* Configuration - Required Dropdown */}
+                <div className="w-full" id="configuration">
+                  <Label htmlFor="configuration" className="text-gray-300">
+                    Configuration <span className="text-red-400">*</span>
+                  </Label>
+                  <Select
+                    value={formData.configuration}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, configuration: value });
+                      if (errors.configuration) {
+                        setErrors({ ...errors, configuration: "" });
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    <SelectTrigger 
+                      id="configuration_select"
+                      className={`mt-2 bg-gray-900 border-gray-800 text-white ${
+                        errors.configuration ? "border-red-500 ring-2 ring-red-500" : ""
+                      }`}
+                    >
+                      <SelectValue placeholder="Select configuration" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                      <SelectItem value="Digital Album" className="text-white">Digital Album</SelectItem>
+                      <SelectItem value="Digital Single" className="text-white">Digital Single</SelectItem>
+                      <SelectItem value="Digital EP" className="text-white">Digital EP</SelectItem>
+                      <SelectItem value="Physical Album" className="text-white">Physical Album</SelectItem>
+                      <SelectItem value="Physical Single" className="text-white">Physical Single</SelectItem>
+                      <SelectItem value="Physical EP" className="text-white">Physical EP</SelectItem>
+                      <SelectItem value="Vinyl Album" className="text-white">Vinyl Album</SelectItem>
+                      <SelectItem value="Vinyl Single" className="text-white">Vinyl Single</SelectItem>
+                      <SelectItem value="CD Album" className="text-white">CD Album</SelectItem>
+                      <SelectItem value="CD Single" className="text-white">CD Single</SelectItem>
+                      <SelectItem value="CD EP" className="text-white">CD EP</SelectItem>
+                      <SelectItem value="Cassette Album" className="text-white">Cassette Album</SelectItem>
+                      <SelectItem value="Cassette Single" className="text-white">Cassette Single</SelectItem>
+                      <SelectItem value="Streaming Only" className="text-white">Streaming Only</SelectItem>
+                      <SelectItem value="Download Only" className="text-white">Download Only</SelectItem>
+                      <SelectItem value="Compilation" className="text-white">Compilation</SelectItem>
+                      <SelectItem value="Mixtape" className="text-white">Mixtape</SelectItem>
+                      <SelectItem value="Live Album" className="text-white">Live Album</SelectItem>
+                      <SelectItem value="Remix Album" className="text-white">Remix Album</SelectItem>
+                      <SelectItem value="Soundtrack" className="text-white">Soundtrack</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.configuration && (
+                    <p className="text-red-400 text-sm mt-1">{errors.configuration}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          {/* Primary Contributions Section */}
+          <Card className="border-gray-800 bg-gray-900/30">
+            <CardHeader>
+              <CardTitle className="text-white text-xl">Primary Contributions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {primaryContributions.map((cont, index) => (
+                <div key={index} className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <Label className="text-gray-300">Artist</Label>
+                    <Select
+                      value={cont.artist}
+                      onValueChange={(value) => {
+                        const newContributions = [...primaryContributions];
+                        newContributions[index].artist = value;
+                        setPrimaryContributions(newContributions);
+                      }}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
+                        <SelectValue placeholder="Select artist" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        {artists.map((artist) => (
+                          <SelectItem key={artist.id} value={artist.id} className="text-white">
+                            {artist.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2 pb-2">
+                    <Checkbox
+                      id={`primary_featured_${index}`}
+                      checked={cont.featured}
+                      onCheckedChange={(checked) => {
+                        const newContributions = [...primaryContributions];
+                        newContributions[index].featured = checked as boolean;
+                        setPrimaryContributions(newContributions);
+                      }}
+                      disabled={loading}
+                    />
+                    <Label htmlFor={`primary_featured_${index}`} className="text-gray-300">
+                      Featured
+                    </Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newContributions = primaryContributions.filter((_, i) => i !== index);
+                      setPrimaryContributions(newContributions);
+                    }}
+                    disabled={loading}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPrimaryContributions([...primaryContributions, { artist: "", featured: false }])}
+                disabled={loading}
+                className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Primary Contribution
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Contributions Section */}
+          <Card className="border-gray-800 bg-gray-900/30">
+            <CardHeader>
+              <CardTitle className="text-white text-xl">Additional Contributions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {contributions.map((cont, index) => (
+                <div key={index} className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <Label className="text-gray-300">Artist</Label>
+                    <Select
+                      value={cont.artist}
+                      onValueChange={(value) => {
+                        const newContributions = [...contributions];
+                        newContributions[index].artist = value;
+                        setContributions(newContributions);
+                      }}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
+                        <SelectValue placeholder="Select artist" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        {artists.map((artist) => (
+                          <SelectItem key={artist.id} value={artist.id} className="text-white">
+                            {artist.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newContributions = contributions.filter((_, i) => i !== index);
+                      setContributions(newContributions);
+                    }}
+                    disabled={loading}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setContributions([...contributions, { artist: "" }])}
+                disabled={loading}
+                className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Contribution
+              </Button>
+            </CardContent>
+          </Card>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
@@ -780,7 +534,7 @@ export default function NewRelease() {
             >
               {loading ? "Creating..." : "Create Release"}
             </ButtonPrimary>
-            <Link to="/releases" href="/releases" className="flex-1">
+            <Link to="/releases" className="flex-1">
               <Button
                 type="button"
                 variant="outline"
@@ -793,70 +547,6 @@ export default function NewRelease() {
           </div>
         </form>
       </div>
-    </div>
-  );
-}
-
-// Input Field
-function InputField({
-  label,
-  name,
-  type = "text",
-  value,
-  onChange,
-  loading,
-}: {
-  label: string;
-  name: string;
-  type?: string;
-  value: any;
-  onChange: (v: any) => void;
-  loading: boolean;
-}) {
-  return (
-    <div className="w-full">
-      <Label htmlFor={name} className="text-gray-300">
-        {label}
-      </Label>
-      <Input
-        id={name}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-2 bg-gray-900 border-gray-800 text-white"
-        disabled={loading}
-      />
-    </div>
-  );
-}
-
-// Array Input Field
-function ArrayInputField({
-  label,
-  values,
-  onChange,
-  loading,
-}: {
-  label: string;
-  values: string[];
-  onChange: (arr: string[]) => void;
-  loading: boolean;
-}) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value.split(",").map((s) => s.trim()));
-  };
-
-  return (
-    <div className="w-full">
-      <Label className="text-gray-300">{label}</Label>
-      <Input
-        type="text"
-        value={values.join(",")}
-        onChange={handleChange}
-        className="mt-2 bg-gray-900 border-gray-800 text-white"
-        placeholder="Comma separated values"
-        disabled={loading}
-      />
     </div>
   );
 }
