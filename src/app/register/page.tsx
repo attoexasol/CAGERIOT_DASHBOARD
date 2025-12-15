@@ -8,6 +8,8 @@ import { ButtonPrimary } from '../../components/ButtonPrimary';
 import { Button } from '../../components/ui/button';
 import { SEO } from '../../components/SEO';
 import { toast } from 'sonner@2.0.3';
+import { useAuth } from '../../hooks/useAuth';
+import { authService } from '../../lib/api';
 
 // Support both Next.js and React Router
 const isNextJs = typeof window === 'undefined' || !!(window as any).__NEXT_DATA__;
@@ -39,7 +41,9 @@ if (!Link) {
 export default function Register() {
   const router = useRouter ? useRouter() : null;
   const navigate = useNavigate ? useNavigate() : null;
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,37 +54,61 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
       toast.error('Passwords do not match');
       return;
     }
 
     // Validate password strength
     if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
       toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
+      setError('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.success('Account created successfully! Please log in.');
-      
-      // Navigate to login page
-      if (router) {
-        router.push('/');
-      } else if (navigate) {
-        navigate('/');
-      } else {
-        window.location.href = '/';
+      const result = await authService.register({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        organization: formData.organization.trim() || undefined,
+      });
+
+      // Auto-login after successful registration
+      if (result.token && result.user) {
+        await login({
+          email: formData.email.trim(),
+          password: formData.password,
+        });
+        
+        toast.success('Account created successfully!');
+        
+        // Navigate to dashboard
+        if (router) {
+          router.push('/dashboard');
+        } else if (navigate) {
+          navigate('/dashboard');
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed. Please try again.');
+      const errorMessage = error?.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -122,6 +150,11 @@ export default function Register() {
 
         {/* Form */}
         <form onSubmit={handleRegister} className="space-y-3.5 sm:space-y-5">
+          {error && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
           <div>
             <Label htmlFor="name" className="text-sm text-gray-300">
               Full Name

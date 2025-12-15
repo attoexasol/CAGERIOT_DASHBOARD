@@ -279,7 +279,7 @@
  */
 
 import { API_CONFIG, getApiHeaders } from "../../config";
-import { LoginRequest, LoginResponse, User } from "../types";
+import { LoginRequest, LoginResponse, User, SignupResponse, LoginApiResponse } from "../types";
 import { isDemoMode } from "../../config";
 import { logger } from "../../logger";
 import { handleApiResponse } from "../helpers";
@@ -303,38 +303,11 @@ function getAuthToken(): string | null {
 
 export const authService = {
   /**
-   * âœ… LOGIN USER (Hybrid: works for both demo & live)
+   * LOGIN USER
    */
   async login(emailArg: string, passwordArg: string): Promise<LoginResponse> {
-    // âœ… Always allow demo credentials regardless of mode
-    if (emailArg === "demo@cageriot.com" && passwordArg === "demo123") {
-      logger.api("Login as demo user (forced hybrid mode)");
-      await simulateDelay(300); // small delay for realism
-      setAuthToken(demoLoginResponse.token);
-      demoStorage.setUser(demoUser);
-      logger.success("Login successful (demo user)");
-      return demoLoginResponse;
-    }
-
-    // ðŸ§© Keep existing demo mode logic (when explicitly in demo mode)
-    if (isDemoMode()) {
-      logger.api("Login attempt (demo mode)");
-      await simulateDelay();
-
-      // Simple demo validation
-      if (emailArg === "demo@cageriot.com" && passwordArg === "demo123") {
-        setAuthToken(demoLoginResponse.token);
-        logger.success("Login successful (demo mode)");
-        return demoLoginResponse;
-      }
-
-      logger.error("Invalid demo credentials");
-      throw new Error("Invalid credentials. Use demo@cageriot.com / demo123");
-    }
-
-    // ðŸŒ Live API mode (unchanged)
     try {
-      logger.api("Login attempt (live API)");
+      logger.api("Login attempt");
 
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
         method: "POST",
@@ -347,17 +320,37 @@ export const authService = {
         }),
       });
 
-      const data = await handleApiResponse<LoginResponse>(response);
+      const apiResponse = await handleApiResponse<LoginApiResponse>(response);
 
-      if (data.token) {
-        setAuthToken(data.token);
-        logger.success("Login successful (live API)");
+      // Transform the API response to match LoginResponse format
+      if (apiResponse.status && apiResponse.data) {
+        const loginResponse: LoginResponse = {
+          token: apiResponse.data.token,
+          user: {
+            id: apiResponse.data.user.id,
+            name: apiResponse.data.user.name,
+            email: apiResponse.data.user.email,
+            organization: apiResponse.data.user.organization,
+            company: apiResponse.data.user.organization,
+            user_role: apiResponse.data.user.user_role,
+            role: apiResponse.data.user.user_role,
+            createdAt: apiResponse.data.user.created_at || apiResponse.data.user.createdAt,
+          },
+        };
+
+        if (loginResponse.token) {
+          setAuthToken(loginResponse.token);
+          logger.success("Login successful");
+        }
+
+        return loginResponse;
+      } else {
+        throw new Error(apiResponse.message || "Login failed");
       }
-
-      return data;
-    } catch (error) {
-      logger.error("Login failed (live API):", error);
-      throw error;
+    } catch (error: any) {
+      logger.error("Login failed:", error);
+      const errorMessage = error?.message || error?.data?.message || "Invalid email or password. Try again.";
+      throw new Error(errorMessage);
     }
   },
 
@@ -420,32 +413,56 @@ export const authService = {
     email: string;
     password: string;
     name: string;
+    organization?: string;
     company?: string;
   }): Promise<LoginResponse> {
-    // Demo mode
-    if (isDemoMode()) {
-      await simulateDelay();
-      throw new Error("Registration is not available in demo mode");
-    }
-
-    // Live API mode
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/register`, {
+      logger.api("Registration attempt");
+
+      // Prepare request body - use organization if provided, otherwise use company
+      const requestBody = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        organization: data.organization || data.company || "",
+      };
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/signup`, {
         method: "POST",
         headers: getApiHeaders(false),
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestBody),
       });
 
-      const result = await handleApiResponse<LoginResponse>(response);
+      const result = await handleApiResponse<SignupResponse>(response);
 
-      if (result.token) {
-        setAuthToken(result.token);
+      // Transform the API response to match LoginResponse format
+      if (result.status && result.data) {
+        const loginResponse: LoginResponse = {
+          token: result.data.token,
+          user: {
+            id: result.data.user.id,
+            name: result.data.user.name,
+            email: result.data.user.email,
+            organization: result.data.user.organization,
+            company: result.data.user.organization,
+            user_role: result.data.user.user_role,
+            role: result.data.user.user_role,
+            createdAt: result.data.user.created_at || result.data.user.createdAt,
+          },
+        };
+
+        if (loginResponse.token) {
+          setAuthToken(loginResponse.token);
+          logger.success("Registration successful");
+        }
+
+        return loginResponse;
+      } else {
+        throw new Error(result.message || "Registration failed");
       }
-
-      return result;
-    } catch (error) {
+    } catch (error: any) {
       logger.error("Registration failed:", error);
-      throw error;
+      throw new Error(error?.message || "Registration failed. Please try again.");
     }
   },
 

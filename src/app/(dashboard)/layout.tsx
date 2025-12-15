@@ -44,6 +44,7 @@
 import React, { useState } from "react";
 import { Sidebar } from '../../components/Sidebar';
 import { Header } from '../../components/Header';
+import { Footer } from '../../components/Footer';
 
 export default function DashboardLayout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -61,6 +62,7 @@ export default function DashboardLayout({ children }) {
         <main className="flex-1 overflow-y-auto bg-black min-h-0">
           {children}
         </main>
+        <Footer />
       </div>
     </div>
   );

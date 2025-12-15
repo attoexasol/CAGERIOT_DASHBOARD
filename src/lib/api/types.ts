@@ -58,3 +58,47 @@ export interface ListParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
 }
+
+// Auth Types
+export interface User {
+  id: string | number;
+  name: string;
+  email: string;
+  organization?: string;
+  company?: string;
+  user_role?: string;
+  role?: string;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  avatar?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: User;
+  expiresIn?: number;
+}
+
+export interface SignupResponse {
+  status: boolean;
+  message: string;
+  data: {
+    user: User;
+    token: string;
+  };
+}
+
+export interface LoginApiResponse {
+  status: boolean;
+  message: string;
+  data: {
+    user: User;
+    token: string;
+  };
+}

@@ -216,7 +216,6 @@
 "use client";
 
 import { useState } from "react";
-import { Music } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { ButtonPrimary } from "../components/ButtonPrimary";
@@ -224,21 +223,56 @@ import { SEO } from "../components/SEO";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner@2.0.3";
 import myVideo from "../../src/assets/video.mp4";
+import logoImage from "../assets/img/cage riot logo.png";
 export default function Login() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("demo@cageriot.com");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
+
+    // Validation
+    if (!email.trim()) {
+      setError("Please enter a valid email.");
+      setLoading(false);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email.");
+      setLoading(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Password required.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await login({ email, password });
       toast.success("Login successful!");
       window.location.href = "/dashboard";
     } catch (error: any) {
-      toast.error(error?.message || "Login failed. Please try again.");
+      const errorMessage = error?.message || "Something went wrong. Please try again.";
+      if (errorMessage.includes("Invalid") || errorMessage.includes("credentials") || errorMessage.includes("password")) {
+        setError("Invalid email or password. Try again.");
+        toast.error("Invalid email or password. Try again.");
+      } else {
+        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -282,14 +316,21 @@ export default function Login() {
         </div>
         <div className="relative z-10 w-full max-w-md rounded-2xl border border-gray-800 bg-black/50 p-6 md:p-8 backdrop-blur-xl">
           <div className="mb-8 flex flex-col items-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#ff0050]">
-              <Music className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-2xl text-white">CAGE RIOT</h1>
-            <p className="text-sm text-gray-500">Music Rights Management</p>
+            <img 
+              src={logoImage} 
+              alt="Cage Riot Logo" 
+              className="mb-4 h-16 w-auto object-contain"
+            />
+            <h1 className="text-2xl text-white mb-1">Cage Riot</h1>
+            <p className="text-sm text-gray-500">Partner Dashboard</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+                {error}
+              </div>
+            )}
             <div>
               <Label htmlFor="email" className="text-gray-300">
                 Email
@@ -297,9 +338,12 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
                 className="mt-2 bg-gray-900 border-gray-800 text-white placeholder-gray-500"
                 required
               />
@@ -312,9 +356,12 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 className="mt-2 bg-gray-900 border-gray-800 text-white placeholder-gray-500"
                 required
               />
@@ -325,7 +372,7 @@ export default function Login() {
               disabled={loading}
               className="w-full justify-center bg-[#ff0050] hover:bg-[#ff3366]"
             >
-              {loading ? "Logging in..." : "Submit"}
+              {loading ? "Signing in..." : "Sign In"}
             </ButtonPrimary>
           </form>
 
@@ -347,14 +394,6 @@ export default function Login() {
             </p>
           </div>
 
-          <div className="mt-6 rounded-lg bg-gray-900/50 p-4 text-center">
-            <p className="mb-2 text-xs text-gray-400">Demo credentials:</p>
-            <p className="text-xs text-gray-500">
-              Email: demo@cageriot.com
-              <br />
-              Password: demo123
-            </p>
-          </div>
         </div>
       </div>
     </div>

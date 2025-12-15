@@ -4,6 +4,7 @@ import { Search, Moon, Sun, Menu } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 interface HeaderProps {
   onOpenMobileMenu?: () => void;
@@ -11,6 +12,39 @@ interface HeaderProps {
 
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const [darkMode, setDarkMode] = useState(true);
+  const { user } = useAuth();
+
+  // Determine if we should show the Impersonating badge
+  // Only show if:
+  // 1. User is an admin (role === 'admin')
+  // 2. User is impersonating another account (check for impersonatedUserId in localStorage or user object)
+  const shouldShowImpersonating = () => {
+    if (!user) return false;
+    
+    // Don't show for artist accounts
+    const userRole = (user as any).role?.toLowerCase() || '';
+    if (userRole === 'artist') return false;
+    
+    // Only show if user is admin and is impersonating
+    const isAdmin = userRole === 'admin' || userRole === 'administrator';
+    if (!isAdmin) return false;
+    
+    // Check if impersonating (could be stored in localStorage or as a field on user)
+    const impersonatedUserId = localStorage.getItem('impersonated_user_id');
+    const isImpersonating = impersonatedUserId && impersonatedUserId !== user.id;
+    
+    return isImpersonating;
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return 'U';
+    const nameParts = user.name.split(' ');
+    if (nameParts.length >= 2) {
+      return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+    }
+    return user.name[0].toUpperCase();
+  };
 
   return (
     <header className="flex h-14 sm:h-16 items-center justify-between border-b border-gray-800 bg-[#0a0a0a] px-3 sm:px-4 md:px-6 flex-shrink-0">
@@ -36,12 +70,14 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 flex-shrink-0">
-        <Badge
-          variant="secondary"
-          className="hidden md:flex bg-[#ff0050]/10 text-[#ff0050] hover:bg-[#ff0050]/20 border-0 text-xs whitespace-nowrap"
-        >
-          Impersonating
-        </Badge>
+        {shouldShowImpersonating() && (
+          <Badge
+            variant="secondary"
+            className="hidden md:flex bg-[#ff0050]/10 text-[#ff0050] hover:bg-[#ff0050]/20 border-0 text-xs whitespace-nowrap"
+          >
+            Impersonating
+          </Badge>
+        )}
 
         {/* <button
           onClick={() => setDarkMode(!darkMode)}
@@ -52,7 +88,7 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
         <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 cursor-pointer border-2 border-[#ff0050] flex-shrink-0">
           <AvatarFallback className="bg-[#ff0050] text-white text-xs sm:text-sm">
-            G
+            {getUserInitials()}
           </AvatarFallback>
         </Avatar>
       </div>

@@ -8,11 +8,26 @@ import { SEO } from "../../../components/SEO";
 import { releasesService } from "../../../lib/api";
 import { Release } from "../../../lib/api/types";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+
 export default function Dashboard() {
+  const { user } = useAuth();
   const [recentReleases, setRecentReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [allReleases, setAllReleases] = useState<Release[]>([]); 
   const [activeArtists, setActiveArtists] = useState<number>(0);
+
+  // Extract firstName from user name
+  const getFirstName = () => {
+    if (!user?.name) return "User";
+    // If user has firstName field, use it; otherwise extract from name
+    if ((user as any).firstName) {
+      return (user as any).firstName;
+    }
+    // Extract first name from full name
+    const nameParts = user.name.split(" ");
+    return nameParts[0] || "User";
+  };
 
 
   useEffect(() => {
@@ -58,14 +73,14 @@ export default function Dashboard() {
     <div className="p-3 sm:p-4 md:p-6 lg:p-8">
       <SEO
         title="Dashboard"
-        description="Overview of your music rights portfolio with releases, artists, and revenue tracking"
+        description="Your activity and insights with releases, artists, and revenue tracking"
         keywords="dashboard, music rights, releases, artists, revenue"
       />
 
       {/* Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
         <h1 className="mb-1.5 sm:mb-2 text-xl sm:text-2xl md:text-3xl text-white">
-          Hi, user.firstName ** Must dynamically
+          Hi, {getFirstName()}
         </h1>
         <p className="text-xs sm:text-sm md:text-base text-gray-400">
           Your activity and insights
