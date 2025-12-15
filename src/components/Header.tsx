@@ -14,26 +14,23 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
   const [darkMode, setDarkMode] = useState(true);
   const { user } = useAuth();
 
-  // Determine if we should show the Impersonating badge
-  // Only show if:
-  // 1. User is an admin (role === 'admin')
-  // 2. User is impersonating another account (check for impersonatedUserId in localStorage or user object)
-  const shouldShowImpersonating = () => {
-    if (!user) return false;
+  // Get the badge text based on user role
+  // - Admin: Show "Impersonating"
+  // - Regular users and other roles: Don't show badge
+  const getBadgeText = () => {
+    if (!user) return null;
     
-    // Don't show for artist accounts
-    const userRole = (user as any).role?.toLowerCase() || '';
-    if (userRole === 'artist') return false;
+    // Get user role - check both user_role and role fields
+    const userRole = (user as any).user_role?.toLowerCase() || (user as any).role?.toLowerCase() || '';
     
-    // Only show if user is admin and is impersonating
+    // Only show "Impersonating" for admin users
     const isAdmin = userRole === 'admin' || userRole === 'administrator';
-    if (!isAdmin) return false;
+    if (isAdmin) {
+      return 'Impersonating';
+    }
     
-    // Check if impersonating (could be stored in localStorage or as a field on user)
-    const impersonatedUserId = localStorage.getItem('impersonated_user_id');
-    const isImpersonating = impersonatedUserId && impersonatedUserId !== user.id;
-    
-    return isImpersonating;
+    // Don't show badge for regular users or other roles
+    return null;
   };
 
   // Get user initials for avatar
@@ -70,12 +67,12 @@ export function Header({ onOpenMobileMenu }: HeaderProps) {
 
       {/* Right side */}
       <div className="flex items-center gap-1.5 sm:gap-2 md:gap-4 flex-shrink-0">
-        {shouldShowImpersonating() && (
+        {getBadgeText() && (
           <Badge
             variant="secondary"
             className="hidden md:flex bg-[#ff0050]/10 text-[#ff0050] hover:bg-[#ff0050]/20 border-0 text-xs whitespace-nowrap"
           >
-            Impersonating
+            {getBadgeText()}
           </Badge>
         )}
 

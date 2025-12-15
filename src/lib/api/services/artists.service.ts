@@ -115,6 +115,20 @@ export const artistsService = {
       const newArtist: Artist = {
         id: `artist-${Date.now()}`,
         name: artistData.name,
+        spotify_url: artistData.spotify_url || null,
+        apple_url: artistData.apple_url || null,
+        youtube_url: artistData.youtube_url || null,
+        soundcloud_url: artistData.soundcloud_url || null,
+        instagram_url: artistData.instagram_url || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        deleted_at: null,
+        ipi_name_numbers: [],
+        rights_controlled: false,
+        usa_license_indicator: null,
+        x_url: null,
+        facebook_url: null,
+        // Legacy fields
         email: artistData.email,
         role: artistData.role,
         phone: artistData.phone,
@@ -135,17 +149,32 @@ export const artistsService = {
 
     // Live API mode
     try {
+      logger.api('Creating artist (live API)');
+      
+      // Prepare request body - only include name and optional URL fields
+      const requestBody: any = {
+        name: artistData.name,
+      };
+      
+      // Add optional URL fields only if they are provided
+      if (artistData.spotify_url) requestBody.spotify_url = artistData.spotify_url;
+      if (artistData.apple_url) requestBody.apple_url = artistData.apple_url;
+      if (artistData.youtube_url) requestBody.youtube_url = artistData.youtube_url;
+      if (artistData.soundcloud_url) requestBody.soundcloud_url = artistData.soundcloud_url;
+      if (artistData.instagram_url) requestBody.instagram_url = artistData.instagram_url;
+
       const response = await fetch(`${API_CONFIG.BASE_URL}/artists`, {
         method: 'POST',
         headers: getApiHeaders(true),
-        body: JSON.stringify(artistData),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await handleApiResponse<Artist>(response);
+      logger.success('Artist created successfully');
       return data;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Create artist failed:', error);
-      throw error;
+      throw new Error(error?.message || 'Failed to create artist');
     }
   },
 

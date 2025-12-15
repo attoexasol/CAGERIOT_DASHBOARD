@@ -340,6 +340,19 @@ export const authService = {
 
         if (loginResponse.token) {
           setAuthToken(loginResponse.token);
+          
+          // Store admin's actual user ID if they're an admin
+          // This helps us track when they're impersonating another user
+          if (loginResponse.user.user_role === 'admin' || loginResponse.user.role === 'admin') {
+            localStorage.setItem('admin_user_id', String(loginResponse.user.id));
+            // Clear any previous impersonation when logging in
+            localStorage.removeItem('impersonated_user_id');
+          } else {
+            // Clear admin tracking for non-admin users
+            localStorage.removeItem('admin_user_id');
+            localStorage.removeItem('impersonated_user_id');
+          }
+          
           logger.success("Login successful");
         }
 
@@ -362,6 +375,9 @@ export const authService = {
     if (isDemoMode()) {
       await simulateDelay(300);
       setAuthToken(null);
+      // Clear impersonation data
+      localStorage.removeItem('admin_user_id');
+      localStorage.removeItem('impersonated_user_id');
       return;
     }
 
@@ -377,6 +393,9 @@ export const authService = {
       logger.error("Logout failed:", error);
     } finally {
       setAuthToken(null);
+      // Clear impersonation data on logout
+      localStorage.removeItem('admin_user_id');
+      localStorage.removeItem('impersonated_user_id');
     }
   },
 
@@ -453,6 +472,16 @@ export const authService = {
 
         if (loginResponse.token) {
           setAuthToken(loginResponse.token);
+          
+          // Store admin's actual user ID if they're an admin
+          if (loginResponse.user.user_role === 'admin' || loginResponse.user.role === 'admin') {
+            localStorage.setItem('admin_user_id', String(loginResponse.user.id));
+            localStorage.removeItem('impersonated_user_id');
+          } else {
+            localStorage.removeItem('admin_user_id');
+            localStorage.removeItem('impersonated_user_id');
+          }
+          
           logger.success("Registration successful");
         }
 

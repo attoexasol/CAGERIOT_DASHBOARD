@@ -7,13 +7,6 @@ import { Label } from '../../../../components/ui/label';
 import { ButtonPrimary } from '../../../../components/ButtonPrimary';
 import { Button } from '../../../../components/ui/button';
 import { toast } from 'sonner@2.0.3';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../../components/ui/select';
 import { artistsService } from '../../../../lib/api';
 
 // Support both Next.js and React Router
@@ -49,9 +42,11 @@ export default function NewArtist() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    role: 'Primary Artist',
-    email: '',
-    phone: '',
+    spotify_url: '',
+    apple_url: '',
+    youtube_url: '',
+    soundcloud_url: '',
+    instagram_url: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,12 +54,19 @@ export default function NewArtist() {
     setLoading(true);
 
     try {
-      await artistsService.create({
-        name: formData.name,
-        role: formData.role,
-        email: formData.email,
-        phone: formData.phone,
-      });
+      // Prepare request body - only include name and non-empty URL fields
+      const requestData: any = {
+        name: formData.name.trim(),
+      };
+      
+      // Add optional URL fields only if they have values
+      if (formData.spotify_url.trim()) requestData.spotify_url = formData.spotify_url.trim();
+      if (formData.apple_url.trim()) requestData.apple_url = formData.apple_url.trim();
+      if (formData.youtube_url.trim()) requestData.youtube_url = formData.youtube_url.trim();
+      if (formData.soundcloud_url.trim()) requestData.soundcloud_url = formData.soundcloud_url.trim();
+      if (formData.instagram_url.trim()) requestData.instagram_url = formData.instagram_url.trim();
+
+      await artistsService.create(requestData);
       
       toast.success('Artist added successfully!');
       
@@ -121,57 +123,85 @@ export default function NewArtist() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="role" className="text-gray-300">
-                  Role *
-                </Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
-                  disabled={loading}
-                >
-                  <SelectTrigger className="mt-2 bg-gray-900 border-gray-800 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700">
-                    <SelectItem value="Primary Artist">Primary Artist</SelectItem>
-                    <SelectItem value="Featured Artist">Featured Artist</SelectItem>
-                    <SelectItem value="Producer">Producer</SelectItem>
-                    <SelectItem value="Band">Band</SelectItem>
-                    <SelectItem value="Electronic Artist">Electronic Artist</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="pt-4 border-t border-gray-800">
+                <h3 className="mb-4 text-lg text-white">Social Media URLs (Optional)</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="spotify_url" className="text-gray-300">
+                      Spotify Profile URL
+                    </Label>
+                    <Input
+                      id="spotify_url"
+                      type="url"
+                      value={formData.spotify_url}
+                      onChange={(e) => setFormData({ ...formData, spotify_url: e.target.value })}
+                      className="mt-2 bg-gray-900 border-gray-800 text-white"
+                      placeholder="https://open.spotify.com/artist/..."
+                      disabled={loading}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="email" className="text-gray-300">
-                  Email *
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="mt-2 bg-gray-900 border-gray-800 text-white"
-                  placeholder="artist@example.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
+                  <div>
+                    <Label htmlFor="apple_url" className="text-gray-300">
+                      Apple Music Profile URL
+                    </Label>
+                    <Input
+                      id="apple_url"
+                      type="url"
+                      value={formData.apple_url}
+                      onChange={(e) => setFormData({ ...formData, apple_url: e.target.value })}
+                      className="mt-2 bg-gray-900 border-gray-800 text-white"
+                      placeholder="https://music.apple.com/artist/..."
+                      disabled={loading}
+                    />
+                  </div>
 
-              <div>
-                <Label htmlFor="phone" className="text-gray-300">
-                  Phone
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="mt-2 bg-gray-900 border-gray-800 text-white"
-                  placeholder="+1 (555) 000-0000"
-                  disabled={loading}
-                />
+                  <div>
+                    <Label htmlFor="youtube_url" className="text-gray-300">
+                      YouTube URL
+                    </Label>
+                    <Input
+                      id="youtube_url"
+                      type="url"
+                      value={formData.youtube_url}
+                      onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                      className="mt-2 bg-gray-900 border-gray-800 text-white"
+                      placeholder="https://www.youtube.com/..."
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="soundcloud_url" className="text-gray-300">
+                      SoundCloud URL
+                    </Label>
+                    <Input
+                      id="soundcloud_url"
+                      type="url"
+                      value={formData.soundcloud_url}
+                      onChange={(e) => setFormData({ ...formData, soundcloud_url: e.target.value })}
+                      className="mt-2 bg-gray-900 border-gray-800 text-white"
+                      placeholder="https://soundcloud.com/..."
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="instagram_url" className="text-gray-300">
+                      Instagram URL
+                    </Label>
+                    <Input
+                      id="instagram_url"
+                      type="url"
+                      value={formData.instagram_url}
+                      onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                      className="mt-2 bg-gray-900 border-gray-800 text-white"
+                      placeholder="https://www.instagram.com/..."
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

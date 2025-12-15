@@ -92,6 +92,7 @@ export interface SignupResponse {
     user: User;
     token: string;
   };
+  impersonating?: string;
 }
 
 export interface LoginApiResponse {
@@ -101,4 +102,50 @@ export interface LoginApiResponse {
     user: User;
     token: string;
   };
+  impersonating?: string;
+}
+
+// Artist Types
+export interface Artist {
+  id: number | string;
+  name: string;
+  apple_url?: string | null;
+  created_at?: string;
+  deleted_at?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  ipi_name_numbers?: any[];
+  rights_controlled?: boolean;
+  spotify_url?: string | null;
+  updated_at?: string;
+  usa_license_indicator?: string | null;
+  x_url?: string | null;
+  youtube_url?: string | null;
+  soundcloud_url?: string | null;
+  // Legacy fields for backward compatibility
+  email?: string;
+  role?: string;
+  phone?: string;
+  bio?: string;
+  totalReleases?: number;
+  totalStreams?: number;
+  totalRoyalties?: number;
+  joinDate?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateArtistRequest {
+  name: string; // Required
+  spotify_url?: string | null;
+  apple_url?: string | null;
+  youtube_url?: string | null;
+  soundcloud_url?: string | null;
+  instagram_url?: string | null;
+  // Legacy fields for backward compatibility
+  email?: string;
+  role?: string;
+  phone?: string;
+  bio?: string;
 }
