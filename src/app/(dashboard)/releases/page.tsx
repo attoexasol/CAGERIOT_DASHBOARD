@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,12 +10,32 @@ import { SEO } from "../../../components/SEO";
 import { releasesService } from "../../../lib/api/services/releases.service";
 import { Release } from "../../../lib/api/types";
 
+// Support both Next.js and React Router
+const isNextJs = typeof window === 'undefined' || !!(window as any).__NEXT_DATA__;
+let useRouter: any;
+let useNavigate: any;
+
+if (isNextJs) {
+  try {
+    const nextRouter = require('next/navigation');
+    useRouter = nextRouter.useRouter;
+  } catch {}
+}
+
+if (!useRouter) {
+  try {
+    const reactRouter = require('react-router-dom');
+    useNavigate = reactRouter.useNavigate;
+  } catch {}
+}
+
 export default function Releases() {
+  const router = useRouter ? useRouter() : null;
+  const navigate = useNavigate ? useNavigate() : null;
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [totalResults, setTotalResults] = useState(0);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchReleases();
@@ -105,7 +124,15 @@ export default function Releases() {
           {releases.map((item) => (
             <div
               key={item.id}
-              onClick={() => navigate(`/releases/${item.id}/overview`)}
+              onClick={() => {
+                if (router) {
+                  router.push(`/releases/${item.id}/overview`);
+                } else if (navigate) {
+                  navigate(`/releases/${item.id}/overview`);
+                } else {
+                  window.location.href = `/releases/${item.id}/overview`;
+                }
+              }}
               className="cursor-pointer"
             >
               <ReleaseCard

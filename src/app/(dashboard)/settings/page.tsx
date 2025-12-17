@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../../../components/ui/avat
 import { Copy, LogOut, Key, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { authService } from '../../../lib/api/services/auth.service';
+import { useAuth } from '../../../hooks/useAuth';
 import { User } from '../../../lib/api/types';
 import {
   AlertDialog,
@@ -44,6 +45,7 @@ if (!useRouter) {
 export default function Settings() {
   const router = useRouter ? useRouter() : null;
   const navigate = useNavigate ? useNavigate() : null;
+  const { logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State management
@@ -213,7 +215,7 @@ export default function Settings() {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await logout();
       toast.success('Logged out successfully');
       
       if (router) {
@@ -225,6 +227,7 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Logout error:', error);
+      toast.error('Logout failed');
       // Navigate anyway
       if (router) {
         router.push('/');

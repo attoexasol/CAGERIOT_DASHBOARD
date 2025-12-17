@@ -654,7 +654,7 @@ export default function NewTrackPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-gray-700">
                     {artists.map((artist) => (
-                      <SelectItem key={artist.id} value={artist.id || artist.name}>
+                      <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                         {artist.name}
                       </SelectItem>
                     ))}
@@ -691,7 +691,7 @@ export default function NewTrackPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {artists.map((artist) => (
-                        <SelectItem key={artist.id} value={artist.id || artist.name}>
+                        <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                           {artist.name}
                         </SelectItem>
                       ))}
@@ -723,7 +723,7 @@ export default function NewTrackPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {artists.map((artist) => (
-                        <SelectItem key={artist.id} value={artist.id || artist.name}>
+                        <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                           {artist.name}
                         </SelectItem>
                       ))}
@@ -755,7 +755,7 @@ export default function NewTrackPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {artists.map((artist) => (
-                        <SelectItem key={artist.id} value={artist.id || artist.name}>
+                        <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                           {artist.name}
                         </SelectItem>
                       ))}
@@ -787,7 +787,7 @@ export default function NewTrackPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {artists.map((artist) => (
-                        <SelectItem key={artist.id} value={artist.id || artist.name}>
+                        <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                           {artist.name}
                         </SelectItem>
                       ))}
@@ -819,7 +819,7 @@ export default function NewTrackPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
                       {artists.map((artist) => (
-                        <SelectItem key={artist.id} value={artist.id || artist.name}>
+                        <SelectItem key={artist.id} value={artist.id || artist.name} className="text-white">
                           {artist.name}
                         </SelectItem>
                       ))}

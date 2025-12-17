@@ -54,6 +54,12 @@ export const useAuth = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
           });
+          // Explicitly clear persisted storage from localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-storage');
+            // Also clear legacy auth_token for backward compatibility
+            localStorage.removeItem('auth_token');
+          }
         }
       },
 

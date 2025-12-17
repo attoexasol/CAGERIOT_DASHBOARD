@@ -41,13 +41,87 @@
 
 
 
-import React, { useState } from "react";
+'use client';
+
+import React, { useState, useEffect } from "react";
 import { Sidebar } from '../../components/Sidebar';
 import { Header } from '../../components/Header';
 import { Footer } from '../../components/Footer';
 
+// Support both Next.js and React Router
+const isNextJs = typeof window === 'undefined' || !!(window as any).__NEXT_DATA__;
+let useRouter: any;
+let useNavigate: any;
+
+if (isNextJs) {
+  try {
+    const nextRouter = require('next/navigation');
+    useRouter = nextRouter.useRouter;
+  } catch {}
+}
+
+if (!useRouter) {
+  try {
+    const reactRouter = require('react-router-dom');
+    useNavigate = reactRouter.useNavigate;
+  } catch {}
+}
+
+// Helper function to check if token exists in localStorage
+function hasToken(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    // Check Zustand persisted storage
+    const authStorage = localStorage.getItem('auth-storage');
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage);
+      return !!(parsed?.state?.token);
+    }
+    
+    // Also check legacy auth_token for backward compatibility
+    return !!localStorage.getItem('auth_token');
+  } catch {
+    return false;
+  }
+}
+
 export default function DashboardLayout({ children }) {
+  const router = useRouter ? useRouter() : null;
+  const navigate = useNavigate ? useNavigate() : null;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  // Check for token on mount
+  useEffect(() => {
+    const tokenExists = hasToken();
+    setIsChecking(false);
+    
+    if (!tokenExists) {
+      // Redirect to login if no token
+      if (router) {
+        router.push('/');
+      } else if (navigate) {
+        navigate('/');
+      } else {
+        window.location.href = '/';
+      }
+    }
+  }, [router, navigate]);
+
+  // Show loading state while checking token
+  if (isChecking) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-black">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if no token (redirect will happen)
+  if (!hasToken()) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-black overflow-hidden">
