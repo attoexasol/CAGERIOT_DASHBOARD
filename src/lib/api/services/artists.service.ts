@@ -28,7 +28,7 @@ export const artistsService = {
         const search = params.search.toLowerCase();
         artists = artists.filter(a => 
           a.name.toLowerCase().includes(search) ||
-          a.email.toLowerCase().includes(search)
+          a.email?.toLowerCase().includes(search)
         );
       }
       
@@ -59,15 +59,53 @@ export const artistsService = {
       if (params?.order) queryParams.append('order', params.order);
 
       const response = await fetch(
-        `${API_CONFIG.BASE_URL}/artists?${queryParams.toString()}`,
+        `https://openplay.attoexasolutions.com/api/artists${queryParams.toString() ? `?${queryParams.toString()}` : ''}`,
         {
           method: 'GET',
           headers: getApiHeaders(true),
         }
       );
 
-      const data = await handleApiResponse(response);
-      return data;
+      const apiResponse = await handleApiResponse(response);
+      
+      // Transform API response: { results: [...] } to { data: [...] }
+      // Map each artist from { id, name } to full Artist type with defaults
+      const artists: Artist[] = (apiResponse.results || []).map((artist: { id: number; name: string }) => ({
+        id: artist.id,
+        name: artist.name,
+        // Provide defaults for fields the UI expects
+        email: '',
+        role: '',
+        phone: '',
+        bio: '',
+        totalReleases: 0,
+        totalStreams: 0,
+        totalRoyalties: 0,
+        joinDate: new Date().toISOString().split('T')[0],
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        avatar: undefined,
+      }));
+
+      // Apply client-side search filter if provided
+      let filteredArtists = artists;
+      if (params?.search) {
+        const search = params.search.toLowerCase();
+        filteredArtists = artists.filter(a => 
+          a.name.toLowerCase().includes(search)
+        );
+      }
+
+      return {
+        data: filteredArtists,
+        pagination: {
+          page: apiResponse.current_page || 1,
+          limit: 10,
+          total: apiResponse.total_results || filteredArtists.length,
+          totalPages: Math.ceil((apiResponse.total_results || filteredArtists.length) / 10),
+        },
+      };
     } catch (error) {
       logger.error('Get artists failed:', error);
       throw error;

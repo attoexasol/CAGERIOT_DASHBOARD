@@ -36,8 +36,7 @@ export default function Artists() {
 
   const filteredArtists = artists.filter(
     (artist) =>
-      artist.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      artist.role.toLowerCase().includes(searchQuery.toLowerCase())
+      artist.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

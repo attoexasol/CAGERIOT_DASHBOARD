@@ -498,7 +498,7 @@ export const authService = {
   /**
    * REQUEST PASSWORD RESET
    */
-  async forgotPassword(email: string): Promise<void> {
+  async forgotPassword(email: string): Promise<{ token: string; expires_at: string }> {
     if (isDemoMode()) {
       await simulateDelay();
       throw new Error("Password reset is not available in demo mode");
@@ -514,7 +514,16 @@ export const authService = {
         }
       );
 
-      await handleApiResponse(response);
+      const data = await handleApiResponse<{ status: boolean; message: string; token: string; expires_at: string }>(response);
+      
+      if (data.status && data.token) {
+        return {
+          token: data.token,
+          expires_at: data.expires_at,
+        };
+      } else {
+        throw new Error(data.message || "Failed to generate reset token");
+      }
     } catch (error) {
       logger.error("Forgot password failed:", error);
       throw error;
@@ -524,7 +533,7 @@ export const authService = {
   /**
    * RESET PASSWORD
    */
-  async resetPassword(token: string, password: string): Promise<void> {
+  async resetPassword(token: string, password: string, confirm_password: string): Promise<void> {
     if (isDemoMode()) {
       await simulateDelay();
       throw new Error("Password reset is not available in demo mode");
@@ -536,11 +545,15 @@ export const authService = {
         {
           method: "POST",
           headers: getApiHeaders(false),
-          body: JSON.stringify({ token, password }),
+          body: JSON.stringify({ token, password, confirm_password }),
         }
       );
 
-      await handleApiResponse(response);
+      const data = await handleApiResponse<{ status: boolean; message: string }>(response);
+      
+      if (!data.status) {
+        throw new Error(data.message || "Password reset failed");
+      }
     } catch (error) {
       logger.error("Reset password failed:", error);
       throw error;

@@ -46,6 +46,9 @@ export const API_CONFIG = {
   BASE_URL: getBaseUrl(),
   USERNAME: getEnv("VITE_API_USERNAME", "EJLLN8KJ"),
   PASSWORD: getEnv("VITE_API_PASSWORD", "0cb81fba-adba-4942-ae0f-d2f577571dde"),
+  // Aliases for backward compatibility
+  API_USERNAME: getEnv("VITE_API_USERNAME", "EJLLN8KJ"),
+  API_PASSWORD: getEnv("VITE_API_PASSWORD", "0cb81fba-adba-4942-ae0f-d2f577571dde"),
   // API_KEY: getEnv(
   //   "VITE_API_KEY",
   //   "ajbWGxm8BRbJr0lSHaAWD4uu24D0ewizX1GwGXcrwT8fZVzeboa870qbH9jw"

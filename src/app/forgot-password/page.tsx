@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Music, ArrowLeft, Mail } from 'lucide-react';
+import { useState, FormEvent } from 'react';
+import { Music, ArrowLeft } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { ButtonPrimary } from '../../components/ButtonPrimary';
 import { Button } from '../../components/ui/button';
 import { SEO } from '../../components/SEO';
 import { toast } from 'sonner@2.0.3';
+import { authService } from '../../lib/api';
 
 // Support both Next.js and React Router
 const isNextJs = typeof window === 'undefined' || !!(window as any).__NEXT_DATA__;
@@ -42,17 +43,25 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [new_password, setNewPassword] = useState('');
+  const [confirm_password, setConfirmPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await authService.forgotPassword(email);
       
-      toast.success('Password reset link sent to your email!');
-      setEmailSent(true);
+      if (result.token) {
+        setToken(result.token);
+        toast.success('Reset token generated successfully!');
+        setEmailSent(true);
+      } else {
+        throw new Error('Token not received from API');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to send reset link. Please try again.');
     } finally {
@@ -60,13 +69,47 @@ export default function ForgotPassword() {
     }
   };
 
-  const handleBackToLogin = () => {
-    if (router) {
-      router.push('/');
-    } else if (navigate) {
-      navigate('/');
-    } else {
-      window.location.href = '/';
+  const handleSubmitPassword = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!token) {
+      toast.error('Reset token is missing');
+      return;
+    }
+
+    // Validate passwords match
+    if (new_password !== confirm_password) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    // Validate password strength
+    if (new_password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await authService.resetPassword(token, new_password, confirm_password);
+      
+      toast.success('Password reset successful!');
+      
+      // Redirect to login page after successful reset
+      setTimeout(() => {
+        if (router) {
+          router.push('/');
+        } else if (navigate) {
+          navigate('/');
+        } else {
+          window.location.href = '/';
+        }
+      }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reset password. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -136,7 +179,7 @@ export default function ForgotPassword() {
                 className="w-full justify-center" 
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? 'Sending...' : 'Send'}
               </ButtonPrimary>
             </form>
 
@@ -151,36 +194,59 @@ export default function ForgotPassword() {
           </>
         ) : (
           <>
-            {/* Success message */}
-            <div className="mb-6 flex flex-col items-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-                <Mail className="h-8 w-8 text-green-500" />
+            {/* Password reset form */}
+            <form onSubmit={handleSubmitPassword} className="space-y-6">
+              <div>
+                <Label htmlFor="new_password" className="text-gray-300">
+                  New Password
+                </Label>
+                <Input
+                  id="new_password"
+                  type="password"
+                  placeholder="Enter new password"
+                  value={new_password}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-2 bg-gray-900 border-gray-800 text-white placeholder-gray-500"
+                  required
+                  disabled={submitting || !token}
+                  minLength={8}
+                />
               </div>
-              <h2 className="mb-2 text-xl text-white">Check your email</h2>
-              <p className="text-center text-sm text-gray-400">
-                We've sent a password reset link to
-              </p>
-              <p className="text-center text-sm text-white">{email}</p>
-            </div>
 
-            <div className="rounded-lg bg-gray-900/50 p-4 mb-6">
-              <p className="text-xs text-gray-400 text-center">
-                Didn't receive the email? Check your spam folder or try again.
-              </p>
-            </div>
+              <div>
+                <Label htmlFor="confirm_password" className="text-gray-300">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirm_password"
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={confirm_password}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-2 bg-gray-900 border-gray-800 text-white placeholder-gray-500"
+                  required
+                  disabled={submitting || !token}
+                  minLength={8}
+                />
+              </div>
 
-            <ButtonPrimary 
-              onClick={handleBackToLogin} 
-              className="w-full justify-center"
-            >
-              Back to Login
-            </ButtonPrimary>
+              <ButtonPrimary 
+                type="submit" 
+                className="w-full justify-center" 
+                disabled={submitting || !token}
+              >
+                {submitting ? 'Submitting...' : 'Submit'}
+              </ButtonPrimary>
+            </form>
 
             <div className="mt-4 text-center">
               <button
                 onClick={() => {
                   setEmailSent(false);
                   setEmail('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                  setToken(null);
                 }}
                 className="text-sm text-gray-400 hover:text-[#ff0050]"
               >
