@@ -117,10 +117,30 @@ function normalizeRelease(item: any, isMinimal: boolean = false): any {
     type: item.type || "Album",
     releaseDate: item.release_date ?? item.releaseDate ?? "",
     description: item.internal_synopsis ?? item.description ?? "",
-    coverArt:
-      (item.cover_art?.id ? (item.cover_art as any) : null) ||
-      item.coverArt ||
-      "/no-image.png",
+    coverArt: (() => {
+      // Priority 1: Direct cover_art_url from API response
+      if (item.cover_art_url) return item.cover_art_url;
+      
+      // Priority 2: Nested cover_art object with cover_art_url
+      if (item.cover_art?.cover_art_url) return item.cover_art.cover_art_url;
+      
+      // Priority 3: cover_art_id - construct download URL (API will return signed URL)
+      // Note: This is a fallback - ideally cover_art_url should be in the response
+      if (item.cover_art_id) {
+        return `${API_CONFIG.BASE_URL}/cover_art/${item.cover_art_id}/download`;
+      }
+      
+      // Priority 4: cover_art object with id
+      if (item.cover_art?.id) {
+        return `${API_CONFIG.BASE_URL}/cover_art/${item.cover_art.id}/download`;
+      }
+      
+      // Priority 5: Legacy coverArt field
+      if (item.coverArt) return item.coverArt;
+      
+      // Default: no image placeholder
+      return "/no-image.png";
+    })(),
     upc: item.upc ?? "",
     createdAt: item.created_at ?? item.createdAt ?? new Date().toISOString(),
     updatedAt: item.updated_at ?? item.updatedAt ?? new Date().toISOString(),
@@ -308,15 +328,31 @@ export const releasesService = {
       logger.api("Creating release (demo mode)");
       await simulateDelay();
 
-      const newRelease: Release = {
-        id: `demo-${Date.now()}`,
-        ...releaseData,
+      const newRelease: any = {
+        id: String(Date.now()),
         artist: "Demo Artist",
+        artistId: "",
+        coverArt: "/no-image.png",
+        upc: "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        status: "",
+        isrc: "",
+        metadata_language: "",
+        label: null,
+        version: "",
+        cline_year: "",
+        pline_year: "",
+        genre: "",
+        ...releaseData,
+        title: releaseData.title || "Untitled",
+        type: releaseData.type || "Album",
+        releaseDate: releaseData.releaseDate || "",
+        description: releaseData.description || "",
+        release_date: releaseData.releaseDate || "",
       };
 
-      demoStorage.create("releases", newRelease);
+      demoStorage.add("releases", newRelease);
       return newRelease;
     }
 
@@ -348,10 +384,20 @@ export const releasesService = {
         throw new Error(`Failed to create release: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log("✅ API Response:", data);
+      const apiResponse = await response.json();
+      console.log("✅ API Response:", apiResponse);
 
-      return normalizeRelease(data);
+      // Handle API response structure: { status, message, data: { ... } }
+      const responseReleaseData = apiResponse.data || apiResponse;
+      
+      // Return both normalized release and raw response for cover_art extraction
+      const normalizedRelease = normalizeRelease(responseReleaseData);
+      
+      // Attach raw response data for access to nested cover_art object
+      return {
+        ...normalizedRelease,
+        _rawResponse: apiResponse,
+      } as any;
     } catch (error) {
       logger.error("Create release failed:", error);
       throw error;

@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { Music, ArrowLeft } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { ButtonPrimary } from '../../components/ButtonPrimary';
 import { Button } from '../../components/ui/button';
 import { SEO } from '../../components/SEO';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { authService } from '../../lib/api';
 
 // Support both Next.js and React Router
@@ -48,6 +48,19 @@ export default function ForgotPassword() {
   const [confirm_password, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Check for token in URL parameters (from email link)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token');
+      if (tokenFromUrl) {
+        setToken(tokenFromUrl);
+        setEmailSent(true);
+        toast.info('Please enter your new password');
+      }
+    }
+  }, []);
+
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -57,7 +70,7 @@ export default function ForgotPassword() {
       
       if (result.token) {
         setToken(result.token);
-        toast.success('Reset token generated successfully!');
+        toast.success(result.message || 'If the email exists, a reset link has been sent.');
         setEmailSent(true);
       } else {
         throw new Error('Token not received from API');

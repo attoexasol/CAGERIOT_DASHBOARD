@@ -1,9 +1,10 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Search, Moon, Sun, Menu } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 interface HeaderProps {
@@ -13,23 +14,66 @@ interface HeaderProps {
 export function Header({ onOpenMobileMenu }: HeaderProps) {
   const [darkMode, setDarkMode] = useState(true);
   const { user } = useAuth();
+  const location = useLocation();
+  const params = useParams();
 
-  // Get the badge text based on user role
-  // - Admin: Show "Impersonating"
-  // - Regular users and other roles: Don't show badge
-  const getBadgeText = () => {
-    if (!user) return null;
+  /**
+   * Determines if impersonation is active
+   * isImpersonating = true only when:
+   * - user role is admin
+   * - AND an artistId (or artist context) is active
+   * 
+   * isImpersonating = false when:
+   * - admin is on the admin dashboard
+   * - no artist context is selected
+   * - regular users should never enter impersonation state
+   */
+  const isImpersonating = (): boolean => {
+    // Regular users should never enter impersonation state
+    if (!user) return false;
     
     // Get user role - check both user_role and role fields
     const userRole = (user as any).user_role?.toLowerCase() || (user as any).role?.toLowerCase() || '';
-    
-    // Only show "Impersonating" for admin users
     const isAdmin = userRole === 'admin' || userRole === 'administrator';
-    if (isAdmin) {
-      return 'Impersonating';
+    
+    // Only admins can impersonate
+    if (!isAdmin) {
+      return false;
     }
     
-    // Don't show badge for regular users or other roles
+    // Check for active artist context from multiple sources
+    const pathname = location.pathname;
+    
+    // Check if we're on the main admin dashboard or artists list - impersonation should be false
+    const isMainDashboard = pathname === '/dashboard';
+    const isArtistsList = pathname === '/artists' || pathname === '/artists/new';
+    
+    if (isMainDashboard || isArtistsList) {
+      return false;
+    }
+    
+    // Check for artistId in URL params (e.g., /artists/:id or routes that include artist context)
+    const artistIdFromUrl = params.id && pathname.includes('/artists/') ? params.id : null;
+    
+    // Check for artistId in localStorage (could be stored as various keys)
+    const artistIdFromStorage = 
+      localStorage.getItem('artist_id') || 
+      localStorage.getItem('selected_artist_id') || 
+      localStorage.getItem('active_artist_id') ||
+      localStorage.getItem('impersonated_user_id'); // This might actually be the artist ID
+    
+    // Check if artist context is active
+    const hasActiveArtistContext = Boolean(artistIdFromUrl || artistIdFromStorage);
+    
+    // Impersonation is only true when admin AND artist context is active
+    return hasActiveArtistContext;
+  };
+
+  // Get the badge text based on impersonation status
+  const getBadgeText = () => {
+    if (isImpersonating()) {
+      return 'Impersonating';
+    }
     return null;
   };
 

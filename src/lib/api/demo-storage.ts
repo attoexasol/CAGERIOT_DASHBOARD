@@ -15,6 +15,7 @@ interface DemoStorage {
   performers: any[];
   payouts: any[];
   royalties: any[];
+  coverArt: any[];
   user: any | null;
 }
 
@@ -31,6 +32,7 @@ const storage: DemoStorage = {
   performers: [],
   payouts: [],
   royalties: [],
+  coverArt: [],
   user: null,
 };
 

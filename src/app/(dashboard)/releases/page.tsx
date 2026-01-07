@@ -142,6 +142,7 @@ export default function Releases() {
                 type={item.type || "Album"}
                 upc={item.upc || null}
                 digital={item.configuration}
+                coverArtUrl={item.coverArt}
                 imageUrl={item.coverArt || ""}
               />
             </div>

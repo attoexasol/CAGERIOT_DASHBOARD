@@ -76,12 +76,22 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onClose }: VideoPlayer
         onClick={() => setIsOpen(true)}
         className="group relative cursor-pointer overflow-hidden rounded-xl bg-gray-900/50 transition-all hover:bg-gray-800/50"
       >
-        <div className="relative aspect-video">
-          <img
-            src={thumbnail}
-            alt={title}
-            className="h-full w-full object-cover"
-          />
+        <div className="relative aspect-video bg-gray-900">
+          {thumbnail ? (
+            <img
+              src={thumbnail}
+              alt={title}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                // Fallback to a default placeholder if thumbnail fails to load
+                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&h=225&fit=crop';
+              }}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-800">
+              <Play className="h-12 w-12 text-gray-600" />
+            </div>
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#ff0050]">
               <Play className="ml-1 h-6 w-6 text-white" />
@@ -110,12 +120,22 @@ export function VideoPlayer({ videoUrl, thumbnail, title, onClose }: VideoPlayer
             <video
               ref={videoRef}
               className={`h-full w-full transition-all duration-300 ${isMaximized ? 'object-contain' : 'object-cover'}`}
-              poster={thumbnail}
+              poster={thumbnail || undefined}
               onTimeUpdate={handleTimeUpdate}
               onEnded={() => setIsPlaying(false)}
               onClick={togglePlay}
+              onError={(e) => {
+                console.error('Video playback error:', e);
+                console.error('Video URL:', videoUrl);
+              }}
+              onLoadedData={() => {
+                console.log('Video loaded successfully:', videoUrl);
+              }}
+              crossOrigin="anonymous"
             >
               <source src={videoUrl} type="video/mp4" />
+              <source src={videoUrl} type="video/webm" />
+              <source src={videoUrl} type="video/ogg" />
               Your browser does not support the video tag.
             </video>
 

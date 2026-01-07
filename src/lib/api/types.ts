@@ -149,3 +149,50 @@ export interface CreateArtistRequest {
   phone?: string;
   bio?: string;
 }
+
+// Cover Art Types
+export interface CoverArt {
+  id: number;
+  title: string;
+  type: string;
+  resource_number?: string | null;
+  parental_advisory?: string | null;
+  original_filename?: string | null;
+  cover_art_url?: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
+export interface CreateCoverArtRequest {
+  title: string;
+  resource_number?: string;
+  parental_advisory?: string;
+}
+
+export interface UpdateCoverArtRequest {
+  title?: string;
+  resource_number?: string;
+  parental_advisory?: string;
+}
+
+export interface CoverArtResponse {
+  status: boolean;
+  message: string;
+  data: CoverArt | string; // data can be empty string on upload success
+}
+
+export interface PresignedUrlResponse {
+  url: string;
+  fields: {
+    key: string;
+    acl?: string;
+    success_action_status?: string;
+    policy?: string;
+    'x-amz-credential'?: string;
+    'x-amz-algorithm'?: string;
+    'x-amz-date'?: string;
+    'x-amz-signature'?: string;
+    [key: string]: string | undefined;
+  };
+}

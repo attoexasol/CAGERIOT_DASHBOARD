@@ -160,7 +160,7 @@ export default function Dashboard() {
                   title={release.title}
                   artist={release.artist}
                   type={release.type}
-                  // FIX public packshot support
+                  coverArtUrl={release.coverArt}
                   imageUrl={
                     release.publicPackshot ||
                     `https://packshot.rightshub.net/${release.id}` ||

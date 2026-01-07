@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-
+import logoImage from "../assets/img/cage riot logo.png";
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home, section: "ASSETS" },
   { name: "Releases", href: "/releases", icon: Music, section: "ASSETS" },
@@ -103,7 +103,7 @@ export function Sidebar({
           <div className="flex items-center gap-3">
             <img
               className="h-14 w-14"
-              src="../../src/assets/img/cage riot logo.png"
+              src={logoImage}
               alt=""
             />
             {/* <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ff0050]">

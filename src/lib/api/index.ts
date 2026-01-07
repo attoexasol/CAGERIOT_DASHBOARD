@@ -46,3 +46,4 @@ export { writersService } from "./services/writers.service";
 export { publishersService } from "./services/publishers.service";
 export { producersService } from "./services/producers.service";
 export { performersService } from "./services/performers.service";
+export { coverArtService } from "./services/cover-art.service";

@@ -113,6 +113,7 @@ export default function Register() {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black px-4 py-8">
